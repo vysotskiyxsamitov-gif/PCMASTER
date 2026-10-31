@@ -22,9 +22,13 @@
       "three.min.js"
     ],
     "win": {
-      "target": "portable"
+      "target": "nsis"
     },
-    "portable": {
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
       "artifactName": "PC-MASTER.exe"
     }
   }
