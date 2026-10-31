@@ -5,6 +5,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
+    fullscreen: true,
     backgroundColor: '#05060a',
     autoHideMenuBar: true,
     title: 'PC МАСТЕР',
@@ -16,7 +17,7 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
-  // F11 — полноэкранный режим
+  // F11 — выйти из полного экрана / вернуться в него
   win.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown' && input.key === 'F11') {
       win.setFullScreen(!win.isFullScreen());
