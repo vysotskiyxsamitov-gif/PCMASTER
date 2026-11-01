@@ -78,6 +78,16 @@ function pauseDraw() {
     ) +
 
     pzBtn(
+      'Разводы при повороте: ' + (opt.mb === 0 ? 'выкл' : 'вкл'),
+      'opt.mb=opt.mb===0?1:0;pauseDraw()'
+    ) +
+
+    pzBtn(
+      'Свечение неона: ' + (opt.bl === 0 ? 'выкл' : 'вкл'),
+      'opt.bl=opt.bl===0?1:0;pauseDraw()'
+    ) +
+
+    pzBtn(
       'Сохранить и выйти в меню',
       'pauseToMenu()'
     ) +
