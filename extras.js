@@ -1,4 +1,3 @@
-[extras.js](https://github.com/user-attachments/files/34234102/extras.js)
 /* extras.js — звуки, меню по Esc, песочница.
    Подключается в index.html ОДНОЙ строкой перед </body>:
    <script src="extras.js"></script>
@@ -68,7 +67,7 @@ addEventListener('pointerdown',()=>{if(opt.s)actx()});
 addEventListener('keydown',()=>{if(opt.s)actx()});
 
 /* ---------- 3. меню по Esc (пауза) ---------- */
-let paused=false,prevMode='play',pauseT=0,lockWas=false,lastTry=0,quiet=0;
+let paused=false,prevMode='play',pauseT=0,resumeT=0,lockWas=false,lastTry=0,quiet=0;
 const coarse=()=>matchMedia('(pointer:coarse)').matches;
 const css=document.createElement('style');
 css.textContent=`
@@ -102,7 +101,7 @@ function pause(){
  lab();view(false);ov.classList.add('on')}
 function resume(){
  if(!paused)return;
- paused=false;mode=prevMode;ov.classList.remove('on');plErr=0;UI()}
+ paused=false;mode=prevMode;ov.classList.remove('on');plErr=0;noPL=0;resumeT=performance.now();UI()}
 ov.addEventListener('click',e=>{
  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
  if(a==='resume')resume();else if(a==='set'){lab();view(true)}else if(a==='back')view(false);
@@ -124,7 +123,7 @@ document.addEventListener('pointerlockchange',()=>{
  if(!l&&lockWas&&mode==='play'&&!paused)pause();
  lockWas=l});
 /* автозахват мыши по уже сделанному клику; ошибки такого захвата не считаются */
-document.addEventListener('pointerlockerror',()=>{if(performance.now()-quiet<800){plErr=Math.max(0,plErr-1);if(plErr<3)noPL=0}});
+document.addEventListener('pointerlockerror',()=>{const n=performance.now();if(n-quiet<800||n-resumeT<5000){plErr=Math.max(0,plErr-1);if(plErr<3)noPL=0}});
 /* пауза замораживает время игры */
 const _gd=clock.getDelta.bind(clock);
 clock.getDelta=function(){const d=_gd();return paused?0:d};
@@ -135,6 +134,7 @@ pb.onclick=pause;$$('w').appendChild(pb);
 (function loop(){
  requestAnimationFrame(loop);
  pb.style.display=(coarse()&&mode==='play'&&!paused)?'block':'none';
+ if(mode==='play'&&!coarse())ctl.style.setProperty('cursor','none','important');else ctl.style.removeProperty('cursor');
  if(mode==='play'&&!document.pointerLockElement&&!noPL&&!coarse()&&navigator.userActivation&&navigator.userActivation.isActive&&performance.now()-lastTry>700){
   lastTry=quiet=performance.now();tryLock()}
  if(mode==='play'&&mvf>.25){const s=Math.floor(walk/Math.PI);if(s!==lastStep){lastStep=s;sfx('step')}}
