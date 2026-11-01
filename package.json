@@ -5,8 +5,8 @@
   "main": "main.js",
   "author": "PC Master",
   "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder --win --publish never"
+    "start": "node prepare.js && electron .",
+    "dist": "node prepare.js && electron-builder --win --publish never"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -25,6 +25,9 @@
       "intro.js",
       "extras.js",
       "fx.js",
+      "street.js",
+      "Room.js",
+      "ultra.js",
       "three.min.js"
     ],
     "win": {

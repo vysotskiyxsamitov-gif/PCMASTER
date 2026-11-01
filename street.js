@@ -5,9 +5,9 @@
   if (window.__streetLoaded) return;
   window.__streetLoaded = 1;
 
-  var W = 640, H = 320;
+  var W = 640, H = 320, S = 1.5;
   var cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
+  cv.width = W * S; cv.height = H * S;
   var x = cv.getContext('2d');
 
   var sd = 11;
@@ -120,6 +120,7 @@
   }
 
   function draw() {
+    x.setTransform(S, 0, 0, S, 0, 0);
     var g = x.createLinearGradient(0, 0, 0, 170);
     g.addColorStop(0, '#141c40'); g.addColorStop(.55, '#4b2f6e'); g.addColorStop(1, '#f59e0b');
     x.fillStyle = g; x.fillRect(0, 0, W, 210);
@@ -165,7 +166,7 @@
   }
   function mount() {
     var tex = new THREE.CanvasTexture(cv);
-    tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
 
     // прячем старое статичное окно на этом месте
     scene.children.forEach(function (o) {
