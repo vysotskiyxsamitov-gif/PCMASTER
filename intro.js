@@ -1,6 +1,12 @@
 /* PC МАСТЕР — вступление: герой осматривает магазин, ему звонит Виктор.
    Телефон достаётся из кармана, звонок можно принять или сбросить. Дальше — сцена с коллекторами (startBeat). */
 var CALL = null, PHN = null, PHC = null, PHX = null;
+/* кто звонит: имя, буква на аватарке, подпись на экране телефона, цвет, голос */
+var CALLERS = {
+  V: { name: 'Виктор', ch: 'В', role: 'кредитор', col: '#f87171', pitch: .5, rate: .92 },
+  M: { name: 'Максим', ch: 'М', role: 'друг · поставщик', col: '#fbbf24', pitch: .85, rate: 1 }
+};
+var CUR = CALLERS.V;
 
 var CK_LOOK = [[0, 0, -.3], [1.2, 0, -.3], [3, .95, -.2], [5.2, .95, -.2], [6.4, .4, -.26], [8, -.8, -.14], [10, -.8, -.14], [11.6, -.3, -.35], [13.2, 0, -.3], [14.4, 0, -.3]];
 var CK_BUZZ = [[0, 0, -.3], [.45, -.1, -.42], [1.1, -.4, -.95], [2.3, -.4, -.95], [3.2, -.1, -.5]];
@@ -43,11 +49,11 @@ function sayP(t, p, r) {
 
 function callSub(w, txt) {
   var e = $('sub');
-  var nm = w == 'V' ? ['Виктор', '#f87171'] : w == 'S' ? ['SMS · Виктор', '#f87171'] : w == 'Y' ? ['Ты', '#6ee7ff'] : null;
+  var nm = w == 'V' ? ['Виктор', '#f87171'] : w == 'M' ? ['Максим', '#fbbf24'] : w == 'S' ? ['SMS · ' + CUR.name, CUR.col] : w == 'Y' ? ['Ты', '#6ee7ff'] : null;
   e.innerHTML = (nm ? '<b style="color:' + nm[1] + '">' + nm[0] + ':</b> ' : '') + txt;
   e.style.display = 'block';
   if (CALL) CALL.subT = Math.max(2.6, txt.length * .075);
-  if (w == 'V' || w == 'S') { if (w == 'V') sayP(txt, .5, .92); } else say(txt);
+  if (w == 'V' || w == 'M' || w == 'S') { if (w == 'V') sayP(txt, .5, .92); else if (w == 'M') sayP(txt, CALLERS.M.pitch, CALLERS.M.rate); } else say(txt);
 }
 
 /* ---------- телефон ---------- */
@@ -63,11 +69,11 @@ function drawPhone(st, tt) {
     var pl = st == 'ring' ? (Math.sin(tt * 6) * .5 + .5) : 0;
     x.strokeStyle = 'rgba(110,231,255,' + (.15 + .35 * pl) + ')'; x.lineWidth = 3;
     x.beginPath(); x.arc(W / 2, 120, 44 + pl * 8, 0, 7); x.stroke();
-    x.fillStyle = '#334155'; x.beginPath(); x.arc(W / 2, 120, 40, 0, 7); x.fill();
-    x.fillStyle = '#e5e7eb'; x.font = 'bold 40px sans-serif'; x.textBaseline = 'middle'; x.fillText('В', W / 2, 122); x.textBaseline = 'alphabetic';
-    x.font = 'bold 26px sans-serif'; x.fillStyle = '#fff'; x.fillText('Виктор', W / 2, 200);
+    x.fillStyle = CUR.col == '#f87171' ? '#334155' : '#3f3a22'; x.beginPath(); x.arc(W / 2, 120, 40, 0, 7); x.fill();
+    x.fillStyle = '#e5e7eb'; x.font = 'bold 40px sans-serif'; x.textBaseline = 'middle'; x.fillText(CUR.ch, W / 2, 122); x.textBaseline = 'alphabetic';
+    x.font = 'bold 26px sans-serif'; x.fillStyle = '#fff'; x.fillText(CUR.name, W / 2, 200);
     x.font = '14px sans-serif'; x.fillStyle = '#9aa4b8';
-    x.fillText(st == 'ring' ? 'кредитор · входящий вызов' : 'идёт разговор', W / 2, 224);
+    x.fillText(st == 'ring' ? CUR.role + ' · входящий вызов' : 'идёт разговор', W / 2, 224);
     var btn = function (cx, cy, col, kind, lb) {
       x.fillStyle = col; x.beginPath(); x.arc(cx, cy, 26, 0, 7); x.fill();
       x.strokeStyle = '#fff'; x.fillStyle = '#fff'; x.lineWidth = 4; x.lineCap = 'round';
@@ -116,7 +122,7 @@ function phonePose(p, vib, tt) {
 function setPh(p) {
   var C = CALL;
   C.ph = p; C.pt = 0; C.fl = {};
-  C.sl = (CALL_SUBS[p] || []).map(function (s) { return { t: s[0], w: s[1], x: s[2], d: 0 }; });
+  C.sl = ((C.so && C.so[p]) || CALL_SUBS[p] || []).map(function (s) { return { t: s[0], w: s[1], x: s[2], d: 0 }; });
   if (p == 'buzz') { PHN.visible = true; phonePose(PH_HID, 0, 0); }
   if (p == 'ring') { $('sub').style.display = 'none'; C.scr = 'ring'; ringStart(); UI(); }
   if (p == 'dec') ringStop();
@@ -124,13 +130,14 @@ function setPh(p) {
 }
 
 function startCall() {
+  CUR = CALLERS.V;
   phoneEnsure();
-  CALL = { t: 0, pt: 0, ph: 'look', cy: 0, cp: -.3, bn: 2.8, bk: 0, subT: 0, sl: [], fl: {}, sd: 0, scr: 'off' };
+  CALL = { t: 0, pt: 0, ph: 'look', cy: 0, cp: -.3, bn: 2.8, bk: 0, subT: 0, sl: [], fl: {}, sd: 0, scr: 'off', mid: 0 };
   mode = 'call';
   wrk.visible = false; deco.visible = true; flG.visible = false;
   tScr.material.color.setHex(0xffffff);
   hL.visible = hR.visible = false; bod.visible = false;
-  R.domElement.style.filter = 'contrast(1.08) saturate(1.2)';
+  R.domElement.style.filter = 'contrast(1.1) saturate(1.5) brightness(.9)';
   $('lt').style.display = $('lb').style.display = 'none';
   $('sub').style.display = 'none'; $('sub').style.zIndex = 2; $('ui').style.zIndex = 2;
   var o = $('cf');
@@ -141,10 +148,42 @@ function startCall() {
   UI();
 }
 
+/* Звонок посреди игры (Виктор или Максим) — та же анимация телефона, что и во вступлении.
+   lines: [['M'|'V'|'Y', 'текст'], ...]. Взял трубку — слышишь разговор. Не взял — то же самое придёт SMS. */
+function incomingCall(who, lines, cb) {
+  var cr = CALLERS[who];
+  if (!cr || mode != 'play' || CALL) {
+    talk(lines.map(function (l) { return [l[0] == 'Y' ? 'Ты' : (CALLERS[l[0]] || cr || CALLERS.M).name, l[1]]; }), cb);
+    return;
+  }
+  CUR = cr;
+  phoneEnsure();
+  var subs = [], t = .9, sms = [];
+  lines.forEach(function (l) {
+    subs.push([t, l[0], l[1]]);
+    t += Math.max(2.6, l[1].length * .085 + .8);
+    if (l[0] != 'Y') sms.push(l[1]);
+  });
+  var txt = sms.join(' ');
+  CALL = { t: 0, pt: 0, ph: '', cy: 0, cp: cpit, bn: 99, bk: 0, subT: 0, sl: [], fl: {}, sd: 0, scr: 'off', mid: 1, who: who, cb: cb,
+    bp: cpit, by: cyaw, px: cam.position.x, py: cam.position.y, pz: cam.position.z, ae: t + .2,
+    de: 3.6 + Math.max(2.6, txt.length * .075) + 1.2,
+    so: { buzz: [[1.4, 'Y', 'Звонит ' + cr.name + '…']], ans: subs, dec: [[.4, 'Y', 'Не сейчас.'], [3.6, 'S', txt]] },
+    sv: { c: carryG ? carryG.visible : false, h: hm ? hm.visible : false } };
+  VX = VZ = 0;
+  if (carryG) carryG.visible = false;
+  if (hm) hm.visible = false;
+  mode = 'call';
+  $('sub').style.display = 'none'; $('sub').style.zIndex = 2; $('ui').style.zIndex = 2;
+  PHN.visible = false; drawPhone('off', 0);
+  setPh('buzz');
+  UI();
+}
+
 function callUI() {
   var C = CALL;
   if (!C || C.ph != 'ring') return '';
-  return '<div class="it g pa" style="text-align:center"><p><b style="color:var(--ac)">Входящий вызов — Виктор</b></p>' +
+  return '<div class="it g pa" style="text-align:center"><p><b style="color:var(--ac)">Входящий вызов — ' + CUR.name + '</b></p>' +
     '<button class="b pr" style="margin-right:10px;background:linear-gradient(90deg,#22c55e,#16a34a)" onclick="callAnswer(1)">Ответить [E]</button>' +
     '<button class="b" style="background:rgba(239,68,68,.35)" onclick="callAnswer(0)">Не брать [Q]</button></div>';
 }
@@ -152,14 +191,27 @@ function callUI() {
 function callAnswer(yes) {
   var C = CALL;
   if (!C || C.ph != 'ring') return;
-  try { G.ev = G.ev || {}; G.ev.call = yes ? 'answer' : 'decline'; } catch (e) {}
+  if (!C.mid) { try { G.ev = G.ev || {}; G.ev.call = yes ? 'answer' : 'decline'; } catch (e) {} }
   setPh(yes ? 'ans' : 'dec');
   UI();
 }
 
 function callEnd() {
   ringStop();
+  var C0 = CALL;
   CALL = null;
+  if (C0 && C0.mid) {
+    if (PHN) PHN.visible = false;
+    if (carryG) carryG.visible = C0.sv.c;
+    if (hm) hm.visible = C0.sv.h;
+    $('sub').style.display = 'none'; $('sub').style.zIndex = ''; $('ui').style.zIndex = '';
+    try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    CUR = CALLERS.V;
+    mode = 'play'; UI();
+    try { tryLock(); } catch (e) {}
+    if (C0.cb) C0.cb();
+    return;
+  }
   if (PHN) PHN.visible = false;
   var o = $('cf'); if (o) o.style.opacity = 0;
   $('sub').style.display = 'none'; $('sub').style.zIndex = ''; $('ui').style.zIndex = '';
@@ -172,6 +224,7 @@ function callTick(dt) {
   if (!C) return;
   C.t += dt; C.pt += dt;
   var t = C.t, pt = C.pt, K = CK_LOOK, pose = PH_HID, vib = 0, ph = C.ph;
+  var AE = C.ae || CALL_ANS_END, DE = C.de || CALL_DEC_END;
 
   if (ph == 'look') {
     K = CK_LOOK;
@@ -187,15 +240,15 @@ function callTick(dt) {
     K = CK_RING; pose = PH_RD; vib = 1;
     C.sd -= dt; if (C.sd <= 0) { drawPhone('ring', t); C.sd = .1; }
   } else if (ph == 'ans') {
-    K = pt < CALL_ANS_END ? CK_ANS : CK_OUT;
-    if (pt < CALL_ANS_END) {
+    K = pt < AE ? CK_ANS : CK_OUT;
+    if (pt < AE) {
       if (!C.fl.a && pt >= .1) { C.fl.a = 1; sfx('tap'); drawPhone('talk', t); }
       var dip = pt < .3 ? Math.sin(clamp01(pt / .3) * Math.PI) * .03 : 0;
       pose = lerpP(PH_RD, PH_EAR, ease(clamp01((pt - .3) / 1)));
       pose = pose.slice(); pose[1] -= dip;
     } else {
       if (!C.fl.h) { C.fl.h = 1; sfx('hangup'); drawPhone('off', t); }
-      var q = pt - CALL_ANS_END;
+      var q = pt - AE;
       if (q > .1 && !C.fl.r) { C.fl.r = 1; sfx('rustle'); }
       pose = lerpP(PH_EAR, PH_HID, ease(clamp01(q / CALL_OUT_LEN)));
       if (q >= CALL_OUT_LEN + .4) { callEnd(); return; }
@@ -207,7 +260,7 @@ function callTick(dt) {
     if (!C.fl.r && pt >= .55) { C.fl.r = 1; sfx('rustle'); }
     pose = lerpP(PH_RD, PH_HID, ease(clamp01((pt - .45) / .9)));
     if (!C.fl.m && pt >= 2.6) { C.fl.m = 1; sfx('buzz'); sfx('sms'); }
-    if (pt >= CALL_DEC_END) { callEnd(); return; }
+    if (pt >= DE) { callEnd(); return; }
   }
 
   // субтитры по времени текущей фазы
@@ -215,6 +268,16 @@ function callTick(dt) {
   if (C.subT > 0 && (C.subT -= dt) <= 0) $('sub').style.display = 'none';
 
   if (PHN.visible) phonePose(pose, vib, t);
+
+  // звонок посреди игры: камера остаётся там, где стоит игрок, лишь чуть опускает взгляд на телефон
+  if (C.mid) {
+    var off = ph == 'ring' ? -.2 : ph == 'buzz' ? (pt > 1 ? -.2 : -.05) : (ph == 'ans' && pt < AE) ? -.04 : 0;
+    C.cp += (C.bp + off - C.cp) * (1 - Math.exp(-dt * 6));
+    var mb = (ph == 'buzz' && ((pt > .05 && pt < .3) || (pt > .7 && pt < .95))) ? Math.sin(t * 80) * .006 : 0;
+    cam.position.set(C.px + Math.sin(t * .5) * .01, C.py + Math.sin(t * 1.25) * .012, C.pz);
+    cam.rotation.set(C.cp + Math.sin(t * .8 + 1) * .008, C.by + Math.sin(t * .63) * .012, mb + Math.sin(t * .4) * .004);
+    return;
+  }
 
   // взгляд: ключи → плавная кривая → инерция головы + дыхание и лёгкое покачивание
   var L = kf(K, pt), gy = L(1), gp = L(2), k = 1 - Math.exp(-dt * 8);

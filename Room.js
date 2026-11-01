@@ -49,7 +49,7 @@
 
     /* ---------- стены: светлая покраска, панели, плинтус, молдинг ---------- */
     var wallBase = ct(256, 640, function (x, W, H) {
-      x.fillStyle = '#cfc9bd'; x.fillRect(0, 0, W, H); noise(x, W, H, 900, .05);
+      x.fillStyle = '#7f8fb3'; x.fillRect(0, 0, W, H); noise(x, W, H, 900, .05);
       var wy = 640 - 3.2 * 64;
       x.fillStyle = '#232a3a'; x.fillRect(0, wy, W, H - wy);
       for (var i = 0; i < 4; i++) { x.strokeStyle = 'rgba(255,255,255,.13)'; x.lineWidth = 2; x.strokeRect(i * 64 + 8, wy + 22, 48, H - wy - 58); }
@@ -67,17 +67,17 @@
 
     /* ---------- подвесной потолок со светильниками ---------- */
     var ctex = ct(256, 256, function (x, W, H) {
-      x.fillStyle = '#e9e7e1'; x.fillRect(0, 0, W, H); noise(x, W, H, 700, .05);
+      x.fillStyle = '#9a9fb0'; x.fillRect(0, 0, W, H); noise(x, W, H, 700, .05);
       x.strokeStyle = '#9a9a96'; x.lineWidth = 4; x.strokeRect(0, 0, W, H);
     }, 10, 8); ctex.offset.set(.5, .5);
     var cm = new THREE.Mesh(new THREE.PlaneGeometry(20, 16), new THREE.MeshStandardMaterial({ map: ctex, roughness: .95, metalness: 0 }));
     cm.rotation.x = PI / 2; cm.position.y = 7.8; scene.add(cm);
-    var pm = new THREE.MeshBasicMaterial({ color: 0xfff4e0 });
+    var pm = new THREE.MeshBasicMaterial({ color: 0xe6d3b0 });
     [-6, -2, 2, 6].forEach(function (px) { [-4, 0, 4].forEach(function (pz) {
       var p = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), pm); p.rotation.x = PI / 2; p.position.set(px, 7.78, pz); scene.add(p);
     }); });
     [[-4, -4], [4, -4], [-4, 1], [4, 1], [-4, 5], [4, 5]].forEach(function (a) {
-      var l = new THREE.PointLight(0xfff0d8, 1.0, 17); l.position.set(a[0], 7.2, a[1]); scene.add(l);
+      var l = new THREE.PointLight(0xffe2b8, .7, 17); l.position.set(a[0], 7.2, a[1]); scene.add(l);
     });
     bx(scene, 20, .25, .2, 0xe7e2d8, 0, 7.7, -7.9, 0, .8, 0); bx(scene, 20, .25, .2, 0xe7e2d8, 0, 7.7, 7.9, 0, .8, 0);
     bx(scene, .2, .25, 16, 0xe7e2d8, -9.9, 7.7, 0, 0, .8, 0); bx(scene, .2, .25, 16, 0xe7e2d8, 9.9, 7.7, 0, 0, .8, 0);
@@ -85,10 +85,10 @@
     /* ---------- свет: мягче и теплее ---------- */
     scene.children.forEach(function (o) {
       if (o.isPointLight && o.position.y > 8.5) o.visible = false;
-      if (o.isHemisphereLight) { o.intensity = 1.0; o.color.setHex(0xdfe6f5); o.groundColor.setHex(0x5a4a3a); }
-      if (o.isSpotLight) { o.intensity = 1.8; if (o.shadow) o.shadow.radius = 6; }
+      if (o.isHemisphereLight) { o.intensity = .55; o.color.setHex(0xa9b8e0); o.groundColor.setHex(0x4a3a30); }
+      if (o.isSpotLight) { o.intensity = 1.4; if (o.shadow) o.shadow.radius = 6; }
     });
-    R.toneMappingExposure = 1.2;
+    R.toneMappingExposure = .9;
     if (scene.fog) scene.fog.color.setHex(0x1b2030);
     if (scene.background && scene.background.setHex) scene.background.setHex(0x0c0f18);
 
@@ -126,7 +126,7 @@
       h.userData.sec = 1; shF.add(h);
     });
     [[-9.0, 2.6, -5], [-9.0, 2.6, 0], [-9.0, 2.6, 5]].forEach(function (a) {
-      var l = new THREE.PointLight(0xfff0d8, .55, 7); l.position.set(a[0], a[1], a[2]); scene.add(l);
+      var l = new THREE.PointLight(0xffe2b8, .4, 7); l.position.set(a[0], a[1], a[2]); scene.add(l);
     });
 
     // ящики-«обманки» для сцены избиения — на новых местах

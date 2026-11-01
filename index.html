@@ -78,7 +78,7 @@ try{Object.assign(opt,JSON.parse(localStorage.getItem('pcopt')||'{}'))}catch(e){
 function optSave(){try{localStorage.setItem('pcopt',JSON.stringify(opt))}catch(e){}}
 /* ===== рендер и помощники ===== */
 const R=new THREE.WebGLRenderer({antialias:true});R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;R.outputEncoding=THREE.sRGBEncoding;
-$('w').prepend(R.domElement);R.domElement.style.filter='contrast(1.08) saturate(1.2)';
+$('w').prepend(R.domElement);R.domElement.style.filter='contrast(1.1) saturate(1.5) brightness(.9)';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x05060a);scene.fog=new THREE.Fog(0x05060a,16,36);
 const cam=new THREE.PerspectiveCamera(70,1,.1,60);cam.rotation.order='YXZ';scene.add(cam);const clock=new THREE.Clock();
 function mat(c,e,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r===undefined?.5:r,metalness:m===undefined?.3:m,emissive:e||0,emissiveIntensity:e?1.4:0,envMapIntensity:1.4})}
@@ -327,7 +327,7 @@ function wakeTick(dt){WK.t+=dt;const t=WK.t,L=kf(KF,t),sw=t>19;
  cam.position.set(L(1),L(2),L(3));{const dr=Math.min(1,Math.max(0,(t-3)/2));cam.rotation.set(L(5)+(sw?Math.sin(t*3)*.05:0)+dr*(Math.sin(t*1.1)*.012+Math.sin(t*2.3)*.006),L(4)+dr*(Math.sin(t*.8)*.02+Math.sin(t*1.9)*.008),L(6)+(sw?Math.sin(t*2)*.05:0)+dr*Math.sin(t*.6)*.01);cam.position.y+=Math.sin(t*1.4)*.008*dr}
  $('lt').style.height=$('lb').style.height=(1-L(7))*50+'%';R.domElement.style.filter=`blur(${L(8).toFixed(1)}px)`;hands(L(9),t);bod.visible=cam.position.y<1.2;
  SUB.forEach(s=>{if(!s.d&&t>=s[0]){s.d=1;$('sub').textContent=s[1];$('sub').style.display='block';say(s[1])}});if(t>=KF[KF.length-1][0])endWake()}
-function endWake(){R.domElement.style.filter='contrast(1.08) saturate(1.2)';$('lt').style.display=$('lb').style.display=$('sub').style.display='none';hands(0,0);bod.visible=false;save();startPlay()}
+function endWake(){R.domElement.style.filter='contrast(1.1) saturate(1.5) brightness(.9)';$('lt').style.display=$('lb').style.display=$('sub').style.display='none';hands(0,0);bod.visible=false;save();startPlay()}
 let VX=0,VZ=0,orb=0,cyaw=0,cpit=-.3,walk=0,mvf=0,fovT=70,doorA=0,doorW=false,stepN=0;
 function nearDoor(){return CU.some(c=>c.g.position.z>5.8)||RB.some(r=>r.g.position.z>5.8)||THG.some(g=>g.visible&&g.position.z>5.8)}
 function frame(){requestAnimationFrame(frame);ui2();const dt=PZ?(clock.getDelta(),0):Math.min(clock.getDelta(),.05),tt=clock.elapsedTime;tickCU(dt);
@@ -405,16 +405,16 @@ function qText(){if(G.sb)return'Собирай что хочешь — день�
 function badEnd(m){G.win=0;A.m=m;talk([['Виктор','Срок вышел.'],['Виктор','Ребята, объясните ему ещё раз.']],()=>{mode='end';UI()})}
 function ending(){G.win=1;const L=[['Виктор','Всё до цента. Не ожидал. Уважаю.'],['Виктор','Ты мне больше ничего не должен.']];L.push(G.pts.length>=3?['Макс','И целых '+G.pts.length+' точек! Ты снова на вершине.']:['Макс','Магазин жив, ты жив — для начала отлично.']);L.push(G.rival?['Борис','Это не конец. Мы ещё встретимся…']:['Ты','Теперь пора заняться Борисом.']);A.m=`Глава 1 завершена. Долг возвращён, точек: ${G.pts.length}, ПК собрано: ${G.done}. Продолжение следует…`;talk(L,()=>{mode='end';UI()})}
 function storyDay(){if(G.sb)return;const d=G.day,e=G.ev,pd=10000-G.debt;
- if(d>=4&&!e.g){e.g=1;talk([['Макс','Слушай, в районе орудуют воры. Сигнализация или охранник не помешают — загляни во вкладку «Охрана» на компьютере.']])}
- else if(d>=6&&!e.a){e.a=1;talk([['Макс','Продавать по одному ПК — долго. Открой точку: она продаёт сама.'],['Макс','Только следи за расходами: аренда, свет и зарплата сотрудника каждый день.']])}
- else if(d>=8&&!e.b&&pd<2000){e.b=1;talk([['Виктор','Два дня до первого взноса. Две тысячи. Не забудь.']])}
+ if(d>=4&&!e.g){e.g=1;incomingCall('M',[['M','Слушай, в районе орудуют воры. Сигнализация или охранник не помешают — загляни во вкладку «Охрана» на компьютере.']])}
+ else if(d>=6&&!e.a){e.a=1;incomingCall('M',[['M','Продавать по одному ПК — долго. Открой точку: она продаёт сама.'],['M','Только следи за расходами: аренда, свет и зарплата сотрудника каждый день.']])}
+ else if(d>=8&&!e.b&&pd<2000){e.b=1;incomingCall('V',[['V','Два дня до первого взноса. Две тысячи. Не забудь.']])}
  else if(d>=12&&!e.c){e.c=1;talk([['Борис («ТехноГигант»)','Слышал, ты опять в деле. Продай мне остатки — или у тебя не останется клиентов.']],null,[['Послать его',()=>{G.rival=1;toast('Борис сбивает цены: клиенты платят чуть меньше.')}],['Заплатить 500 за «мир»',()=>{if(G.m>=500){G.m-=500;toast('Борис пока отстал.')}else{G.rival=1;toast('Денег нет — Борис давит ценами.')}}]])}
- else if(d>=17&&!e.d){e.d=1;talk([['Макс','Кое-что выяснил про тех, кто тебя избил. Пока не уверен — потом расскажу.']])}
- else if(d>=22&&!e.e&&pd<7000){e.e=1;talk([['Виктор','До двадцатого дня надо было семь тысяч. Не успеешь — сам знаешь.']])}
- else if(d>=25&&!e.f){e.f=1;talk([['Макс','Выяснил. Тех людей нанял Борис — хотел скупить твои точки. Виктор тут ни при чём.'],['Ты','Значит, долг верну. А с Борисом разберёмся потом.']])}
+ else if(d>=17&&!e.d){e.d=1;incomingCall('M',[['M','Кое-что выяснил про тех, кто тебя избил. Пока не уверен — потом расскажу.']])}
+ else if(d>=22&&!e.e&&pd<7000){e.e=1;incomingCall('V',[['V','До двадцатого дня надо было семь тысяч. Не успеешь — сам знаешь.']])}
+ else if(d>=25&&!e.f){e.f=1;incomingCall('M',[['M','Выяснил. Тех людей нанял Борис — хотел скупить твои точки. Виктор тут ни при чём.'],['Y','Значит, долг верну. А с Борисом разберёмся потом.']])}
  save()}
 /* ===== интерфейс ===== */
-function UI(){optSave();let h='';const O=mode=='menu'||mode=='set'||mode=='intro'||mode=='end';showBig.visible=O;showSm.visible=(mode=='beat'&&BT.t<13.2)||mode=='call';dec.visible=mode=='play'||mode=='term'||mode=='talk'||mode=='mg';shF.visible=shI.visible=!O;guardG.visible=!!(G&&G.sec&&G.sec.guard)&&(mode=='play'||mode=='term'||mode=='talk'||mode=='mg');
+function UI(){optSave();let h='';const O=mode=='menu'||mode=='set'||mode=='intro'||mode=='end';showBig.visible=O;const mc=mode=='call'&&CALL&&CALL.mid;showSm.visible=(mode=='beat'&&BT.t<13.2)||(mode=='call'&&!mc);dec.visible=mode=='play'||mode=='term'||mode=='talk'||mode=='mg'||mc;shF.visible=shI.visible=!O;guardG.visible=!!(G&&G.sec&&G.sec.guard)&&(mode=='play'||mode=='term'||mode=='talk'||mode=='mg'||mc);
  if(mode=='menu'){const s=ld();h=`<button class="b pa" style="position:absolute;top:8px;right:8px" onclick="flip=-flip;rs()">⟲ Повернуть вид</button><div class="mn pa"><div class="tt"><small>СИМУЛЯТОР</small><h1>PC МАСТЕР</h1><p>С нуля до империи</p></div><div class="bt"><button class="b pr" onclick="play()">Играть</button><button class="b" ${s?'':'disabled'} onclick="cont()">Продолжить</button><button class="b" onclick="sandbox()">Песочница</button><button class="b" onclick="mode='set';UI()">Настройки</button></div></div>`}
  else if(mode=='set')h=`<div class="mn pa"><div class="tt"><h1 style="font-size:40px">НАСТРОЙКИ</h1></div><div class="bt"><button class="b" onclick="opt.v=!opt.v;UI()">Озвучка героя: ${opt.v?'вкл':'выкл'}</button><button class="b" onclick="opt.s=!opt.s;UI()">Звуки: ${opt.s?'вкл':'выкл'}</button><button class="b" onclick="opt.q=!opt.q;rs();UI()">Графика: ${opt.q?'высокая':'экономная'}</button><button class="b" onclick="opt.mb=opt.mb===0?1:0;UI()">Разводы при повороте: ${opt.mb===0?'выкл':'вкл'}</button><button class="b" onclick="opt.bl=opt.bl===0?1:0;UI()">Свечение неона: ${opt.bl===0?'выкл':'вкл'}</button><button class="b" onclick="opt.ul=opt.ul===0?1:0;UI()">Ультра-графика: ${opt.ul===0?'выкл':'вкл'}</button><button class="b" onclick="opt.ms=[.5,.75,1,1.5,2][([.5,.75,1,1.5,2].indexOf(opt.ms||1)+1)%5];UI()">Чувствительность мыши: ×${opt.ms||1}</button><button class="b" onclick="opt.inv=!opt.inv;UI()">Инверсия Y: ${opt.inv?'вкл':'выкл'}</button><button class="b" onclick="opt.sm=opt.sm?0:1;UI()">Плавная камера: ${opt.sm?'вкл':'выкл'}</button><button class="b" onclick="try{localStorage.removeItem('pcv3');localStorage.removeItem('pcv3sb')}catch(e){};UI()">Стереть сохранение</button><button class="b pr" onclick="mode='menu';UI()">Назад</button></div></div>`;
  else if(mode=='intro')h=`<div class="it g pa"><p>${INTRO[intro]}</p><button class="b pr" onclick="nxt()">${intro<INTRO.length-1?'Дальше':'Смотреть'}</button></div>`;

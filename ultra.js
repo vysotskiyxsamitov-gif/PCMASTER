@@ -25,7 +25,7 @@
         m.position.set(x, y, z); m.rotation.y = ry; es.add(m);
       }
       [-6, -2, 2, 6].forEach(function (x) { [-4, 0, 4].forEach(function (z) {
-        var m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff1dd).multiplyScalar(7) }));
+        var m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff1dd).multiplyScalar(4) }));
         m.rotation.x = Math.PI / 2; m.position.set(x, 4.9, z); es.add(m);
       }); });
       panel(10, 2, 0, 1, -7.9, 0, 0x22d3ee, 3.5);     // неон задней стены
@@ -43,7 +43,7 @@
     var gx = gc.getContext('2d'), gg = gx.createLinearGradient(0, 0, 0, 64);
     gg.addColorStop(0, 'rgba(255,244,224,.95)'); gg.addColorStop(.5, 'rgba(255,240,215,.28)'); gg.addColorStop(1, 'rgba(255,240,215,0)');
     gx.fillStyle = gg; gx.fillRect(0, 0, 4, 64);
-    var shMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, opacity: .07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    var shMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, opacity: .035, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     var shGeo = new THREE.CylinderGeometry(.75, 2.1, 7, 14, 1, true);
     [-6, -2, 2, 6].forEach(function (x) { [-4, 0, 4].forEach(function (z) {
       var c = new THREE.Mesh(shGeo, shMat); c.position.set(x, 4.3, z); c.renderOrder = 2; shafts.add(c);
@@ -60,13 +60,13 @@
     var dx = dc.getContext('2d'), dg = dx.createRadialGradient(16, 16, 0, 16, 16, 16);
     dg.addColorStop(0, 'rgba(255,255,255,1)'); dg.addColorStop(1, 'rgba(255,255,255,0)'); dx.fillStyle = dg; dx.fillRect(0, 0, 32, 32);
     var dgeo = new THREE.BufferGeometry(); dgeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    dust = new THREE.Points(dgeo, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(dc), size: .07, transparent: true, opacity: .45, color: 0xfff1dd, blending: THREE.AdditiveBlending, depthWrite: false }));
+    dust = new THREE.Points(dgeo, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(dc), size: .07, transparent: true, opacity: .28, color: 0xffe2b8, blending: THREE.AdditiveBlending, depthWrite: false }));
     dust.frustumCulled = false; scene.add(dust);
 
     /* ---------- 4. виньетка ---------- */
     try {
       vig = document.createElement('div');
-      vig.style.cssText = 'position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.38) 100%)';
+      vig.style.cssText = 'position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.45) 100%)';
       R.domElement.parentNode.insertBefore(vig, R.domElement.nextSibling);
     } catch (e) { vig = null; }
 
@@ -78,7 +78,7 @@
         (Array.isArray(m) ? m : [m]).forEach(function (mt) {
           if (seen.has(mt)) return; seen.add(mt);
           if (mt.isMeshStandardMaterial) {
-            if (mt.envMapIntensity === 1) mt.envMapIntensity = mt.metalness > .5 ? .9 : (mt.roughness < .5 ? .5 : .2);
+            if (mt.envMapIntensity === 1) mt.envMapIntensity = mt.metalness > .5 ? .7 : (mt.roughness < .5 ? .3 : .1);
             if (mt.map && mt.map.anisotropy < maxA) { mt.map.anisotropy = Math.min(maxA, 16); mt.map.needsUpdate = true; }
           }
         });
