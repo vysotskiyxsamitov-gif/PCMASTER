@@ -142,6 +142,10 @@ pb.onclick=pause;$$('w').appendChild(pb);
 })();
 $$('lk').textContent='Клик — захватить мышь · WASD — ходить · E — действие · Esc — пауза';
 
+/* на компьютере не входим в полноэкранный режим: браузер рисует в нём свои значки (✕ сверху, подсказки по Esc) */
+const _lockL=window.lockL;
+window.lockL=function(){return matchMedia('(pointer:coarse)').matches&&_lockL?_lockL():Promise.resolve()};
+
 /* ---------- 4. песочница ---------- */
 window.save=function(){
  try{const m=G.mk,x=[carry,benchPC&&benchPC.userData.pc].filter(Boolean),c=G.cand,rn=G.rn,gc=G.gc;
