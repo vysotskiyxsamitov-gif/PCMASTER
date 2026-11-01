@@ -1,7 +1,9 @@
-/* PC МАСТЕР — окно на вечернюю улицу: по тротуару ходят люди, по дороге ездят машины.
-   Картинка рисуется в маленьком 2D-холсте и показывается в окне магазина (стена у входа, слева). */
+/* PC МАСТЕР — окна на вечернюю улицу: по тротуару ходят люди, по дороге ездят машины.
+   Картинка рисуется в маленьком 2D-холсте и показывается в двух окнах магазина (стена у входа).
+   Подключать ПОСЛЕ основного скрипта игры:  <script src="street.js"></script> (перед </body>). */
 (function () {
-  if (window.__street) return;
+  if (window.__streetLoaded) return;
+  window.__streetLoaded = 1;
 
   var W = 640, H = 320;
   var cv = document.createElement('canvas');
@@ -18,7 +20,6 @@
   var SKIN = ['#f1c9a5', '#e0b99a', '#c68a62', '#8d5a3c'];
   var CARC = ['#dc2626', '#2563eb', '#e5e7eb', '#facc15', '#16a34a', '#7c3aed'];
 
-  // дальние дома с окнами
   var far = [], px = -20;
   while (px < W + 40) {
     var fw = 34 + rr() * 50, fh = 60 + rr() * 85, b = { x: px, w: fw, h: fh, win: [] };
@@ -26,7 +27,6 @@
       if (rr() < .55) b.win.push([wx, wy, rr() < .5 ? '#fde68a' : '#67e8f9', rr() * 6.28]);
     far.push(b); px += fw + rr() * 6;
   }
-  // ближний ряд магазинов
   var shops = [];
   px = 0;
   while (px < W) {
@@ -55,7 +55,6 @@
   for (i = 0; i < 3; i++) cars.push(mkCar(i, rr() * W));
 
   var T = 0;
-
   function update(dt) {
     T += dt;
     peds.forEach(function (p, k) {
@@ -121,11 +120,9 @@
   }
 
   function draw() {
-    // небо
     var g = x.createLinearGradient(0, 0, 0, 170);
     g.addColorStop(0, '#141c40'); g.addColorStop(.55, '#4b2f6e'); g.addColorStop(1, '#f59e0b');
     x.fillStyle = g; x.fillRect(0, 0, W, 210);
-    // дальние дома
     far.forEach(function (b) {
       x.fillStyle = '#10142a'; x.fillRect(b.x, 175 - b.h, b.w, b.h + 40);
       b.win.forEach(function (w) {
@@ -135,7 +132,6 @@
       });
       x.globalAlpha = 1;
     });
-    // ближний ряд с неоновыми вывесками
     shops.forEach(function (s) {
       x.fillStyle = s.c; x.fillRect(s.x, 112, s.w, 100);
       x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(s.x, 112, 2, 100);
@@ -144,14 +140,11 @@
       x.fillStyle = s.neon; x.fillRect(s.x + 10, 124, s.w - 20, 11);
       glow(s.x + s.w / 2, 130, s.w * .6, s.neon, .35);
     });
-    // тротуар
     x.fillStyle = '#3b4252'; x.fillRect(0, 206, W, 46);
     x.fillStyle = '#566074'; x.fillRect(0, 206, W, 3); x.fillRect(0, 249, W, 3);
-    // дорога
     x.fillStyle = '#16181f'; x.fillRect(0, 252, W, H - 252);
     x.fillStyle = 'rgba(255,255,255,.45)';
     for (var dx = -((T * 20) % 60); dx < W; dx += 60) x.fillRect(dx, 289, 30, 3);
-    // люди дальнего плана, фонари, ближнего плана
     peds.filter(function (p) { return p.far; }).forEach(person);
     lamps.forEach(function (lx) {
       x.fillStyle = '#20242c'; x.fillRect(lx - 2, 120, 4, 128); x.fillRect(lx - 2, 120, 16, 4);
@@ -160,61 +153,69 @@
     });
     peds.filter(function (p) { return !p.far; }).forEach(person);
     cars.forEach(car);
-    // стёкла: лёгкое затемнение по краям
     var v = x.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, W * .65);
     v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.4)');
     x.fillStyle = v; x.fillRect(0, 0, W, H);
   }
-
   window.__street = { cv: cv, update: update, draw: draw };
 
-  /* ---- вставка окна в сцену (в тестовой странице без three.js этот блок пропускается) ---- */
-  if (typeof THREE === 'undefined' || typeof scene === 'undefined') return;
+  /* ---- вставка окон в сцену ---- */
+  function ready() {
+    try { return typeof THREE !== 'undefined' && !!scene && typeof bx === 'function'; } catch (e) { return false; }
+  }
+  function mount() {
+    var tex = new THREE.CanvasTexture(cv);
+    tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
 
-  var tex = new THREE.CanvasTexture(cv);
-  tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    // прячем старое статичное окно на этом месте
+    scene.children.forEach(function (o) {
+      var gm = o.geometry;
+      if (gm && gm.type == 'PlaneGeometry' && Math.abs(o.position.x + 6) < .05 && Math.abs(o.position.z - 7.84) < .05 && Math.abs(o.position.y - 5) < .05) o.visible = false;
+    });
 
-  // прячем старое статичное окно на этом месте
-  scene.children.forEach(function (o) {
-    var gm = o.geometry;
-    if (gm && gm.type == 'PlaneGeometry' && Math.abs(o.position.x + 6) < .05 && Math.abs(o.position.z - 7.84) < .05 && Math.abs(o.position.y - 5) < .05) o.visible = false;
-  });
+    var gc = document.createElement('canvas'); gc.width = 128; gc.height = 64;
+    var gx = gc.getContext('2d'), gg = gx.createLinearGradient(0, 0, 128, 64);
+    gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(.35, 'rgba(255,255,255,.10)'); gg.addColorStop(.5, 'rgba(255,255,255,0)');
+    gg.addColorStop(.62, 'rgba(255,255,255,.07)'); gg.addColorStop(1, 'rgba(255,255,255,0)');
+    gx.fillStyle = gg; gx.fillRect(0, 0, 128, 64);
+    var gtex = new THREE.CanvasTexture(gc);
+    var FR = 0x1b1e26;
 
-  var g3 = new THREE.Group();
-  g3.position.set(-6, 5, 7.8);
-  g3.rotation.y = Math.PI;
-  scene.add(g3);
+    [-6, 6].forEach(function (wx) {
+      var g3 = new THREE.Group();
+      g3.position.set(wx, 5, 7.8);
+      g3.rotation.y = Math.PI;
+      scene.add(g3);
+      g3.add(new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ map: tex })));
+      var glass = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ map: gtex, transparent: true, depthWrite: false }));
+      glass.position.z = .04; g3.add(glass);
+      bx(g3, 6, .22, .22, FR, 0, 1.51, .1);
+      bx(g3, 6, .22, .22, FR, 0, -1.51, .1);
+      bx(g3, .22, 3.2, .22, FR, -2.89, 0, .1);
+      bx(g3, .22, 3.2, .22, FR, 2.89, 0, .1);
+      bx(g3, .1, 2.9, .12, FR, 0, 0, .08);
+      bx(g3, 5.7, .09, .12, FR, 0, .35, .08);
+      bx(g3, 6.4, .16, .5, 0x2a2f3a, 0, -1.68, .22);
+    });
 
-  var view = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ map: tex }));
-  g3.add(view);
+    var last = 0;
+    (function loop(now) {
+      requestAnimationFrame(loop);
+      if (now - last < 50) return;
+      var dt = Math.min(.2, (now - last) / 1000);
+      last = now;
+      update(typeof PZ != 'undefined' && PZ ? 0 : dt);
+      draw();
+      tex.needsUpdate = true;
+    })(0);
+  }
 
-  // отблеск на стекле
-  var gc = document.createElement('canvas'); gc.width = 128; gc.height = 64;
-  var gx = gc.getContext('2d'), gg = gx.createLinearGradient(0, 0, 128, 64);
-  gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(.35, 'rgba(255,255,255,.10)'); gg.addColorStop(.5, 'rgba(255,255,255,0)');
-  gg.addColorStop(.62, 'rgba(255,255,255,.07)'); gg.addColorStop(1, 'rgba(255,255,255,0)');
-  gx.fillStyle = gg; gx.fillRect(0, 0, 128, 64);
-  var glass = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false }));
-  glass.position.z = .04; g3.add(glass);
-
-  // рама, переплёт, подоконник
-  var FR = 0x1b1e26;
-  bx(g3, 6, .22, .22, FR, 0, 1.51, .1);
-  bx(g3, 6, .22, .22, FR, 0, -1.51, .1);
-  bx(g3, .22, 3.2, .22, FR, -2.89, 0, .1);
-  bx(g3, .22, 3.2, .22, FR, 2.89, 0, .1);
-  bx(g3, .1, 2.9, .12, FR, 0, 0, .08);
-  bx(g3, 5.7, .09, .12, FR, 0, .35, .08);
-  bx(g3, 6.4, .16, .5, 0x2a2f3a, 0, -1.68, .22);
-
-  var last = 0;
-  (function loop(now) {
-    requestAnimationFrame(loop);
-    if (now - last < 50) return;
-    var dt = Math.min(.2, (now - last) / 1000);
-    last = now;
-    update(typeof PZ != 'undefined' && PZ ? 0 : dt);
-    draw();
-    tex.needsUpdate = true;
-  })(0);
+  // ждём, пока основной скрипт игры создаст сцену (если street.js подключён раньше — это не мешает)
+  if (ready()) mount();
+  else {
+    var tries = 0, iv = setInterval(function () {
+      if (ready()) { clearInterval(iv); mount(); }
+      else if (++tries > 400) clearInterval(iv);
+    }, 50);
+  }
 })();
