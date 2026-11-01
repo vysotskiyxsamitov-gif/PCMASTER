@@ -82,7 +82,8 @@ css.textContent=`
 .pz-card .b:hover{background:rgba(255,255,255,.17)}.pz-card .b:active{transform:scale(.98)}.pz-card .pr:hover{filter:brightness(1.1)}
 .pz-card .b:focus-visible{outline:2px solid #6ee7ff;outline-offset:2px}
 .pz-row{display:flex;align-items:center;gap:12px;color:#cbd5e1;font-size:15px}.pz-row input{flex:1;accent-color:#6ee7ff}
-.pz-h{color:#98a0ae;font-size:12px}`;
+.pz-h{color:#98a0ae;font-size:12px}
+body.plm,body.plm *{cursor:none!important}`;
 document.head.appendChild(css);
 const ov=document.createElement('div');ov.className='pz';
 ov.innerHTML='<div class="pz-card"><div class="pz-t">ПАУЗА</div>'+
@@ -134,7 +135,7 @@ pb.onclick=pause;$$('w').appendChild(pb);
 (function loop(){
  requestAnimationFrame(loop);
  pb.style.display=(coarse()&&mode==='play'&&!paused)?'block':'none';
- if(mode==='play'&&!coarse())ctl.style.setProperty('cursor','none','important');else ctl.style.removeProperty('cursor');
+ const hide=mode==='play'&&!coarse();document.body.classList.toggle('plm',hide);if(hide)ctl.style.setProperty('cursor','none','important');else ctl.style.removeProperty('cursor');
  if(mode==='play'&&!document.pointerLockElement&&!noPL&&!coarse()&&navigator.userActivation&&navigator.userActivation.isActive&&performance.now()-lastTry>700){
   lastTry=quiet=performance.now();tryLock()}
  if(mode==='play'&&mvf>.25){const s=Math.floor(walk/Math.PI);if(s!==lastStep){lastStep=s;sfx('step')}}
