@@ -74,6 +74,9 @@ addEventListener('keydown',()=>{if(opt.s)actx()});
 /* ---------- 3. меню по Esc (пауза) ---------- */
 let paused=false,prevMode='play',pauseT=0,resumeT=0,lockWas=false,lastTry=0,quiet=0;
 const coarse=()=>matchMedia('(pointer:coarse)').matches;
+/* если в проекте уже есть свой файл паузы (pauseOpen), своё меню паузы здесь не включаем */
+const EXT=typeof window.pauseOpen==='function';
+const pzOpen=()=>!!window.PZ;
 const css=document.createElement('style');
 css.textContent=`
 .pz{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(5,6,10,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -100,7 +103,7 @@ const pzMain=ov.querySelector('.pz-main'),pzSet=ov.querySelector('.pz-set'),pzV=
 function lab(){ov.querySelector('[data-a=snd]').textContent='Звуки: '+(opt.s?'вкл':'выкл');ov.querySelector('[data-a=gfx]').textContent='Графика: '+(opt.q?'высокая':'экономная');pzV.value=Math.round(vol*100)}
 function view(sets){pzMain.style.display=sets?'none':'flex';pzSet.style.display=sets?'flex':'none';const f=ov.querySelector(sets?'[data-a=back]':'[data-a=resume]');if(f)f.focus()}
 function pause(){
- if(paused||mode!=='play')return;
+ if(EXT||paused||mode!=='play')return;
  paused=true;prevMode=mode;pauseT=performance.now();mode='term';
  keys={};jx=jy=0;for(const k in pt)delete pt[k];jb.style.display='none';
  if(document.pointerLockElement)document.exitPointerLock();
@@ -119,12 +122,13 @@ pzV.addEventListener('input',()=>{vol=pzV.value/100;try{localStorage.setItem('pc
 pzV.addEventListener('change',()=>sfx('tick'));
 /* Esc: перехватываем раньше игры; в настройках Esc возвращает на шаг назад */
 addEventListener('keydown',e=>{
- if(e.code!=='Escape')return;
+ if(EXT||e.code!=='Escape')return;
  if(paused){e.stopImmediatePropagation();e.preventDefault();if(performance.now()-pauseT>350){if(pzSet.style.display==='flex')view(false);else resume()}return}
  if(mode==='play'){e.stopImmediatePropagation();e.preventDefault();pause()}
 },true);
 /* Chrome сам отпускает мышь по Esc и клавишу странице не отдаёт — ловим потерю захвата */
 document.addEventListener('pointerlockchange',()=>{
+ if(EXT)return;
  const l=!!document.pointerLockElement;
  if(!l&&lockWas&&mode==='play'&&!paused)pause();
  lockWas=l});
@@ -136,12 +140,12 @@ clock.getDelta=function(){const d=_gd();return paused?0:d};
 /* кнопка паузы на телефоне */
 const pb=document.createElement('button');
 pb.className='b';pb.textContent='⏸ Меню';pb.style.cssText='position:fixed;top:8px;right:10px;display:none;z-index:30;padding:6px 12px';
-pb.onclick=pause;$$('w').appendChild(pb);
+pb.onclick=EXT?()=>window.pauseOpen():pause;$$('w').appendChild(pb);
 (function loop(){
  requestAnimationFrame(loop);
- pb.style.display=(coarse()&&mode==='play'&&!paused)?'block':'none';
- const hide=mode==='play'&&!coarse();document.body.classList.toggle('plm',hide);if(hide)ctl.style.setProperty('cursor','none','important');else ctl.style.removeProperty('cursor');
- if(mode==='play'&&!document.pointerLockElement&&!noPL&&!coarse()&&navigator.userActivation&&navigator.userActivation.isActive&&performance.now()-lastTry>700){
+ pb.style.display=(coarse()&&mode==='play'&&!paused&&!pzOpen())?'block':'none';
+ const hide=mode==='play'&&!coarse()&&!pzOpen();document.body.classList.toggle('plm',hide);if(hide)ctl.style.setProperty('cursor','none','important');else ctl.style.removeProperty('cursor');
+ if(mode==='play'&&!pzOpen()&&!EXT&&!document.pointerLockElement&&!noPL&&!coarse()&&navigator.userActivation&&navigator.userActivation.isActive&&performance.now()-lastTry>700){
   lastTry=quiet=performance.now();tryLock()}
  if(mode==='play'&&mvf>.25){const s=Math.floor(walk/Math.PI);if(s!==lastStep){lastStep=s;sfx('step')}}
 })();
