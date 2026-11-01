@@ -1,4 +1,3 @@
-
 /* PC МАСТЕР — меню паузы (Esc).
    Исправлен возврат Pointer Lock после паузы.
 */
@@ -139,6 +138,8 @@ function pauseClose() {
   try {
     if (mode == 'play' && typeof tryLock === 'function') {
       tryLock();
+      // после выхода по Esc браузер около секунды не даёт захватить мышь: пробуем ещё раз
+      setTimeout(function () { if (mode == 'play' && !PZ && !document.pointerLockElement) tryLock(); }, 1300);
     }
   } catch (e) {
     console.warn('Pointer Lock error:', e);
