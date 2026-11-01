@@ -1,3 +1,4 @@
+
 {
   "name": "pc-master",
   "version": "1.0.0",
@@ -5,8 +6,8 @@
   "main": "main.js",
   "author": "PC Master",
   "scripts": {
-    "start": "node prepare.js && electron .",
-    "dist": "node prepare.js && electron-builder --win --publish never"
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -19,6 +20,11 @@
     "files": [
       "main.js",
       "index.html",
+      "audio.js",
+      "pause.js",
+      "intro.js",
+      "extras.js",
+      "fx.js",
       "three.min.js"
     ],
     "win": {
@@ -29,7 +35,7 @@
       "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "artifactName": "PC-MASTER.exe"
+      "artifactName": "PC-MASTER-Setup-${version}.${ext}"
     }
   }
 }
