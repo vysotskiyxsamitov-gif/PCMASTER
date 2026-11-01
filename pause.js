@@ -138,8 +138,15 @@ function pauseClose() {
   try {
     if (mode == 'play' && typeof tryLock === 'function') {
       tryLock();
+      // в приложении просим вернуть захват мыши «как от клика» (без этого после Esc нужен клик)
+      try { if (window.pcApp && window.pcApp.relock) window.pcApp.relock(); } catch (e) {}
       // после выхода по Esc браузер около секунды не даёт захватить мышь: пробуем ещё раз
-      setTimeout(function () { if (mode == 'play' && !PZ && !document.pointerLockElement) tryLock(); }, 1300);
+      setTimeout(function () {
+        if (mode == 'play' && !PZ && !document.pointerLockElement) {
+          tryLock();
+          try { if (window.pcApp && window.pcApp.relock) window.pcApp.relock(); } catch (e) {}
+        }
+      }, 1300);
     }
   } catch (e) {
     console.warn('Pointer Lock error:', e);
@@ -174,17 +181,20 @@ document.addEventListener('pointerlockchange', function () {
 
 /* Управление паузой клавишей Escape */
 addEventListener('keydown', function (e) {
-  if (e.code != 'Escape') return;
+  if (e.code != 'Escape' || e.repeat) return;
 
   if (PZ) {
     e.preventDefault();
     e.stopPropagation();
     pauseClose();
-  } else if (
-    mode == 'play' &&
-    !document.pointerLockElement
-  ) {
+  } else if (mode == 'play') {
+    // открываем паузу и когда мышь захвачена (в приложении Esc её не отпускает), и когда нет
     e.preventDefault();
     pauseOpen();
   }
 });
+
+/* вызывается из приложения (preload) «как от клика», чтобы вернуть захват мыши без реального нажатия */
+window.__relock = function () {
+  try { if (mode == 'play' && !PZ && !document.pointerLockElement) tryLock(); } catch (e) {}
+};
