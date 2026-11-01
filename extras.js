@@ -55,9 +55,10 @@ const SFX={
 };
 function sfx(n){
  if(!opt.s)return;
- try{const a=actx();if(!a||!SFX[n])return;
+ try{if(!SFX[n]){if(window.__sfx0)window.__sfx0(n);return}const a=actx();if(!a)return;
   if(n==='alarm'){const w=performance.now();if(w-lastAl<700)return;lastAl=w}
   SFX[n](a,a.currentTime+.005)}catch(e){}}
+window.__sfx0=window.sfx; /* звуки из audio.js (телефон и др.), которых нет в этом файле */
 window.sfx=sfx;
 let inBuy=false;
 const BMAP={90:'boom',120:'hit',200:'error',300:'catch',400:'take',500:'put',520:'place',600:'cable',700:'screw',800:'sell',900:'alarm'};
@@ -75,7 +76,7 @@ addEventListener('keydown',()=>{if(opt.s)actx()});
 let paused=false,prevMode='play',pauseT=0,resumeT=0,lockWas=false,lastTry=0,quiet=0;
 const coarse=()=>matchMedia('(pointer:coarse)').matches;
 /* если в проекте уже есть свой файл паузы (pauseOpen), своё меню паузы здесь не включаем */
-const EXT=typeof window.pauseOpen==='function';
+const EXT=true; /* пауза живёт только в pause.js, здесь своё меню паузы не создаётся */
 const pzOpen=()=>!!window.PZ;
 const css=document.createElement('style');
 css.textContent=`
