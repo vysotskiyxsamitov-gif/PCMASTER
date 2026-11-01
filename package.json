@@ -28,6 +28,7 @@
       "street.js",
       "Room.js",
       "ultra.js",
+      "clean.js",
       "three.min.js"
     ],
     "win": {
