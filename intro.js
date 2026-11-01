@@ -81,7 +81,7 @@ function drawPhone(st, tt) {
       else { x.save(); x.translate(cx, cy); x.rotate(-.7); x.fillRect(-4, -13, 8, 26); x.fillRect(-12, -13, 24, 7); x.fillRect(-12, 6, 24, 7); x.restore(); }
       if (lb) { x.font = '13px sans-serif'; x.fillStyle = '#cbd5e1'; x.fillText(lb, cx, cy + 46); }
     };
-    if (st == 'ring') { btn(W * .27, 320, '#ef4444', 'x', 'Сброс'); btn(W * .73, 320, '#22c55e', 'p', 'Ответ'); }
+    if (st == 'ring') { btn(W * .27, 320, '#ef4444', 'x', 'Сброс [Q]'); btn(W * .73, 320, '#22c55e', 'p', 'Ответ [E]'); }
     else btn(W / 2, 320, '#ef4444', 'x', '');
   }
   PHX.needsUpdate = true;
