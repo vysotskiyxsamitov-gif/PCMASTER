@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 
 function createWindow() {
@@ -10,6 +10,7 @@ function createWindow() {
     autoHideMenuBar: true,
     title: 'PC МАСТЕР',
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -27,6 +28,11 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, 'index.html'));
 }
+
+// Игра просит вернуть захват мыши после паузы: выполняем запрос «как от клика», браузер разрешает его без реального нажатия.
+ipcMain.on('pc-relock', (event) => {
+  try { event.sender.executeJavaScript('window.__relock && window.__relock()', true); } catch (e) {}
+});
 
 app.whenReady().then(() => {
   createWindow();
