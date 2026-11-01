@@ -3,6 +3,8 @@
    <script src="extras.js"></script>
    Управление камерой и мышью из index.html НЕ меняется. */
 (function(){
+if(window.__pcExtras)return;window.__pcExtras=1;
+if(typeof window.pauseG==='function')window.pauseG=function(){};
 const $$=id=>document.getElementById(id);
 
 /* ---------- 1. озвучка героя выключена полностью ---------- */
@@ -46,7 +48,10 @@ const SFX={
  alarm(a,t){for(let i=0;i<4;i++)t2(a,t+i*.15,i%2?698:880,.14,'triangle',.3)},
  bell(a,t){bl(a,t,1175,.7,.32);bl(a,t+.22,1568,.9,.32)},
  day(a,t){[523,659,784,1047,1319].forEach((f,i)=>bl(a,t+i*.11,f,.5,.3))},
- tick(a,t){pl(a,t,1500,.05,.16)}
+ tick(a,t){pl(a,t,1500,.05,.16)},
+ paste(a,t){for(let i=0;i<4;i++)nz(a,t+i*.14,.2,'bandpass',500+i*120,1300-i*150,3,.16);pl(a,t+.62,523,.25,.3)},
+ panel(a,t){nz(a,t,.4,'bandpass',2800,900,1.3,.14);tn(a,t+.42,.2,'sine',130,60,.7);bl(a,t+.44,523,.55,.3)},
+ door(a,t){bl(a,t,880,.6,.3);bl(a,t+.22,659,.8,.3)}
 };
 function sfx(n){
  if(!opt.s)return;
@@ -164,7 +169,7 @@ window.UI=function(){
  _UI.apply(this,arguments);
  if(mode==='menu'){
   const bt=document.querySelector('#ui .bt');
-  if(bt&&!bt.querySelector('.sbx')){
+  if(bt&&!bt.querySelector('.sbx')&&![...bt.children].some(x=>/Песочница/.test(x.textContent))){
    const b=document.createElement('button');b.className='b sbx';b.textContent='Песочница';
    b.style.cssText='border-color:#fde68a;color:#fde68a';b.onclick=()=>window.sandbox();
    bt.insertBefore(b,bt.children[2]||null)}}
