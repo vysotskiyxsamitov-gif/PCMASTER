@@ -52,6 +52,16 @@ function pauseDraw() {
     ) +
 
     pzBtn(
+      'Громкость: ' + Math.round((window.__vol || 1) * 100) + '%',
+      'audioVol({25:.5,50:.75,75:1,100:.25}[Math.round((window.__vol||1)*100)]||1);opt.s=1;pauseDraw()'
+    ) +
+
+    pzBtn(
+      '🔊 Проверить звук',
+      'opt.s=1;sfx(\'buy\');setTimeout(function(){sfx(\'place\')},350);setTimeout(function(){sfx(\'door\')},750)'
+    ) +
+
+    pzBtn(
       'Озвучка героя: ' + (opt.v ? 'вкл' : 'выкл'),
       'opt.v=!opt.v;pauseDraw()'
     ) +
@@ -87,12 +97,17 @@ function pauseDraw() {
     ) +
 
     pzBtn(
+      'Ультра-отражения (ultra.js): ' + (opt.ul === 0 ? 'выкл' : 'вкл'),
+      'opt.ul=opt.ul===0?1:0;pauseDraw()'
+    ) +
+
+    pzBtn(
       'Сохранить и выйти в меню',
       'pauseToMenu()'
     ) +
 
     '<div class="mu" style="text-align:center">' +
-    'Esc — продолжить</div>' +
+    'Esc — продолжить · сборка 02.11-B</div>' +
 
     '</div>';
 }
@@ -198,3 +213,15 @@ addEventListener('keydown', function (e) {
 window.__relock = function () {
   try { if (mode == 'play' && !PZ && !document.pointerLockElement) tryLock(); } catch (e) {}
 };
+
+/* Режим «крутить камеру с зажатой кнопкой» нужен только на сенсорных экранах и там, где захват мыши невозможен.
+   Раньше игра включала его навсегда после нескольких неудачных попыток захвата (их плодит Esc),
+   поэтому на компьютере сбрасываем этот флаг: захват мыши пробуется при каждом клике. */
+setInterval(function () {
+  try {
+    if (typeof noPL != 'undefined' && noPL && !matchMedia('(pointer:coarse)').matches) {
+      noPL = 0;
+      plErr = 0;
+    }
+  } catch (e) {}
+}, 250);
