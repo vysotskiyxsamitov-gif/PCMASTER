@@ -30,6 +30,7 @@
       "ultra.js",
       "world.js",
       "world2.js",
+      "chars.js",
       "clean.js",
       "three.min.js"
     ],

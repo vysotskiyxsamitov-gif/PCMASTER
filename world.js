@@ -73,8 +73,8 @@
           var n = AC.sampleRate * 2; NBF = AC.createBuffer(1, n, AC.sampleRate);
           var d = NBF.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
           var s = AC.createBufferSource(); s.buffer = NBF; s.loop = true;
-          var hp = AC.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
-          var lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7000;
+          var hp = AC.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 450;
+          var lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
           rainG = AC.createGain(); rainG.gain.value = 0;
           s.connect(hp); hp.connect(lp); lp.connect(rainG); rainG.connect(MG); s.start();
           var s2 = AC.createBufferSource(); s2.buffer = NBF; s2.loop = true;
@@ -112,13 +112,13 @@
       },
       rustle: function () {         // шелест купюр
         if (!sOn() || !actx()) return; var t = AC.currentTime + .01;
-        for (var i = 0; i < 4; i++) nb(t + i * .11, .13, 'bandpass', 4200 + i * 300, 2600, .8, .16);
+        for (var i = 0; i < 4; i++) nb(t + i * .11, .13, 'bandpass', 2600 + i * 200, 1800, .8, .06);
       },
       thud: function () { if (!sOn() || !actx()) return; var t = AC.currentTime; tn(t, .18, 'sine', 140, 50, .3); },
       whoosh: function (v) {
         if (!sOn() || !actx()) return; var t = AC.currentTime;
-        nb(t, 1.6, 'bandpass', 300, 900, .8, .05 * clamp(v, .3, 1));
-        nb(t + .8, 1.4, 'bandpass', 900, 260, .8, .05 * clamp(v, .3, 1));
+        nb(t, 1.6, 'bandpass', 300, 900, .8, .025 * clamp(v, .3, 1));
+        nb(t + .8, 1.4, 'bandpass', 900, 260, .8, .025 * clamp(v, .3, 1));
       },
       thunder: function () {
         if (!sOn() || !actx()) return; var t = AC.currentTime + .05;
@@ -655,7 +655,7 @@
         trees.forEach(function (t, i) { t.rotation.z = Math.sin(tt * .7 + i) * .012 * (1 + WX.wind); });
         if (AC && rainG) {
           var vol = (sOn() && mode != 'menu') ? 1 : 0, o = 0; try { o = doorA > .3 ? 1.6 : 1; } catch (e) { o = 1; }
-          rainG.gain.setTargetAtTime(WX.rain * .06 * vol * o, AC.currentTime, .4); hushG.gain.setTargetAtTime(.025 * vol * (cars.length > 2 ? 1 : .6) * o, AC.currentTime, .6);
+          rainG.gain.setTargetAtTime(WX.rain * .03 * vol * o, AC.currentTime, .4); hushG.gain.setTargetAtTime(.012 * vol * (cars.length > 2 ? 1 : .6) * o, AC.currentTime, .6);
         }
         W3.beat && W3.beat(dt, tt);
       } catch (e) { if (!loop.err) { loop.err = 1; console.error('[world] loop', e); } }
