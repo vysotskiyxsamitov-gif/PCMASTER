@@ -8,7 +8,7 @@
       try {
         AC = new (window.AudioContext || window.webkitAudioContext)();
         MASTER = AC.createGain();
-        MASTER.gain.value = 0.9;
+        MASTER.gain.value = 0.9 * (window.__vol || 1);
         MASTER.connect(AC.destination);
       } catch (e) { return null; }
     }
@@ -122,6 +122,9 @@
   function ringStop() { if (RT) { clearInterval(RT); RT = null; } }
   function humLevel(v) { if (HUMG) HUMG.gain.value = v; }
 
+  function audioVol(v) { try { localStorage.setItem('pcvol', v); } catch (e) {} if (MASTER) MASTER.gain.value = 0.9 * v; window.__vol = v; if (window.__setVol) window.__setVol(v); }
+  try { var sv = parseFloat(localStorage.getItem('pcvol')); window.__vol = (sv >= .15 && sv <= 1) ? sv : 1; } catch (e) { window.__vol = 1; }
+  window.audioVol = audioVol;
   window.sfx = sfx; window.beep = beep;
   window.ringStart = ringStart; window.ringStop = ringStop; window.humLevel = humLevel;
 })();
