@@ -19,13 +19,27 @@
 
     /* ---------- мешок для мусора ---------- */
     var bag = new THREE.Group(); bag.position.set(3.2, 0, -1.2); bag.visible = false; scene.add(bag);
-    var bm = new THREE.MeshStandardMaterial({ color: 0x15171d, roughness: .32, metalness: .12 });
-    var body = new THREE.Mesh(new THREE.SphereGeometry(.52, 20, 16), bm); body.position.y = .57; body.castShadow = body.receiveShadow = true; bag.add(body);
-    var neck = new THREE.Mesh(new THREE.CylinderGeometry(.09, .2, .3, 12), bm); neck.position.y = 1.14; bag.add(neck);
-    [[-.07, .5], [.07, -.45]].forEach(function (a) {
-      var e = new THREE.Mesh(new THREE.ConeGeometry(.1, .3, 8), bm); e.position.set(a[0], 1.42, 0); e.rotation.z = a[1]; bag.add(e);
+    var bm = new THREE.MeshPhysicalMaterial({ color: 0x11141b, roughness: .4, metalness: 0, clearcoat: .7, clearcoatRoughness: .35 });
+    var bgeo = new THREE.SphereGeometry(.52, 40, 30), pp = bgeo.attributes.position;
+    for (var vi = 0; vi < pp.count; vi++) { // складки и мятый пластик, дно приплюснуто
+      var vx = pp.getX(vi), vy = pp.getY(vi), vz = pp.getZ(vi), vl = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1;
+      var nz = Math.sin(vx * 9 + vy * 5) * Math.cos(vz * 8 - vy * 4) * .03 + Math.sin(vy * 15 + vz * 6) * .014;
+      var kk = 1 + nz / vl; pp.setXYZ(vi, vx * kk * (1 + .06 * Math.max(0, -vy)), vy * kk * (vy < 0 ? .8 : 1), vz * kk);
+    }
+    bgeo.computeVertexNormals();
+    var body = new THREE.Mesh(bgeo, bm); body.position.y = .57; body.castShadow = body.receiveShadow = true; bag.add(body);
+    [[.28, .5, .3, .15], [-.3, .42, .28, .12], [.05, .7, -.38, .13]].forEach(function (l) { // предметы, выпирающие изнутри
+      var s = new THREE.Mesh(new THREE.SphereGeometry(l[3], 14, 10), bm); s.position.set(l[0], l[1], l[2]); s.scale.set(1, .85, 1.1); s.castShadow = true; bag.add(s);
     });
-    var tie = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .05, 12), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: .6 })); tie.position.y = 1.2; bag.add(tie);
+    var neck = new THREE.Mesh(new THREE.CylinderGeometry(.08, .24, .42, 14, 4, true), bm); neck.position.y = 1.12; neck.material.side = THREE.DoubleSide; bag.add(neck);
+    var nk = neck.geometry.attributes.position;
+    for (var ni = 0; ni < nk.count; ni++) { var nx = nk.getX(ni), nzz = nk.getZ(ni), na = Math.atan2(nzz, nx), nr = 1 + .16 * Math.sin(na * 6); nk.setX(ni, nx * nr); nk.setZ(ni, nzz * nr); }
+    neck.geometry.computeVertexNormals();
+    [[-.07, .55], [.08, -.5], [0, .05]].forEach(function (a, i) {
+      var e = new THREE.Mesh(new THREE.ConeGeometry(.08, .34 - i * .07, 8), bm); e.position.set(a[0], 1.46, i == 2 ? .04 : 0); e.rotation.z = a[1]; e.castShadow = true; bag.add(e);
+    });
+    var tie = new THREE.Mesh(new THREE.TorusGeometry(.115, .02, 8, 20), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: .55 })); tie.position.y = 1.22; tie.rotation.x = Math.PI / 2; bag.add(tie);
+    var knot = new THREE.Mesh(new THREE.SphereGeometry(.05, 10, 8), tie.material); knot.position.set(0, 1.22, .12); bag.add(knot);
     var label = lp(bag, 'МУСОР', 1.1, .28, 0, 1.85, 0, '#fff', '#334155', 0);
     function bagGrow() {
       var n = items.filter(function (it) { return it.gone; }).length, g = 1 + Math.min(n, TOTAL) * .012;
