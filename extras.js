@@ -13,7 +13,8 @@ try{opt.v=0}catch(e){}
 
 /* ---------- 2. звуки ---------- */
 let AC=null,NB=null,MASTER=null,lastAl=0,lastStep=0,vol=1;
-try{const v=parseFloat(localStorage.getItem('pcvol'));if(v>=0&&v<=1)vol=v}catch(e){}
+try{const v=parseFloat(localStorage.getItem('pcvol'));if(v>=.15&&v<=1)vol=v}catch(e){}
+window.__setVol=function(v){vol=v;if(MASTER)MASTER.gain.value=1.5*vol};
 function actx(){
  if(!AC){try{
   AC=new(window.AudioContext||window.webkitAudioContext)();
