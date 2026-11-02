@@ -67,11 +67,11 @@ function fxFrame() {
     if ((FX.bc++ & 1) == 0) {
       var bx = FX.bx;
       bx.globalCompositeOperation = 'source-over';
-      bx.filter = 'brightness(1.1) contrast(1.9) blur(1.5px)';
+      bx.filter = 'brightness(.55) contrast(3.4) blur(2px)';
       bx.drawImage(GL, 0, 0, FX.bl.width, FX.bl.height);
       bx.filter = 'none';
     }
-    cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .45;
+    cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .22;
     cx.drawImage(FX.bl, 0, 0, w, h);
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
