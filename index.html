@@ -305,7 +305,7 @@ function serve(c){if(c.s!='wait')return;const need=`ПК от ${M(c.min)}${c.br?
 function tickCU(dt){const tt=clock.elapsedTime;CU.forEach(c=>{const g=c.g,a=g.userData;a.ey.scale.y=((tt*.55+c.sl*.9)%3.3)<.12?.12:1;if(c.s=='in'||c.s=='out'){const tz=c.s=='in'?3.9:9.6,d=tz-g.position.z;if(Math.abs(d)<.1){if(c.s=='in'){c.s='wait';c.v=0;a.lg.forEach(q=>q.rotation.x=0);a.ar.forEach(q=>q.rotation.x=0)}else c.done=1}else{c.v=Math.min(3,(c.v||0)+dt*4);const sp=Math.min(c.v,Math.abs(d)*2+.5);g.position.z+=sp*dt*Math.sign(d);turn(g,d>0?0:Math.PI,dt);gait(g,c.sl,sp/3,tt)}}
  else if(c.s=='wait'){g.position.y=0;g.rotation.x=g.rotation.z=0;let d2=Math.atan2(P.x-g.position.x,P.z-g.position.z)-g.rotation.y;d2=Math.atan2(Math.sin(d2),Math.cos(d2));g.rotation.y+=d2*Math.min(1,dt*4);g.scale.y=1+Math.sin(tt*1.8+c.sl)*.006;a.ar[1].rotation.x=Math.sin(tt*1.3+c.sl)*.05;if((c.t-=dt)<=0){c.s='out';c.mk.visible=false;toast('Клиент устал ждать и ушёл')}}});
  CU=CU.filter(c=>{if(c.done){scene.remove(c.g);hud();return false}return true});
- tickRob(dt);if(mode=='play'&&G.tid&&(spT-=dt)<=0){spT=rnd(18,32);spawn()}}
+ tickRob(dt);if(mode=='play'&&G.tid&&(spT-=dt)<=0){spT=rnd(55,95);spawn()}}
 /* ===== управление ===== */
 const rc=new THREE.Raycaster(),pt={};
 function gather(o,out){if(o.userData.act)out.push(o);o.children.forEach(c=>gather(c,out))}
@@ -484,4 +484,4 @@ const dustG=new THREE.BufferGeometry(),dpp=new Float32Array(180*3);for(let i=0;i
 function glow(x,y,z,c,w,h,o){const t=ct(64,64,q=>{const g=q.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=g;q.fillRect(0,0,64,64)}),s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,color:c,transparent:true,opacity:o||.5,blending:THREE.AdditiveBlending,depthWrite:false}));s.position.set(x,y,z);s.scale.set(w,h,1);scene.add(s)}
 glow(0,7,-7.6,0x22d3ee,10,3,.45);[[-5,9.7,-2],[5,9.7,-2],[0,9.7,4.5]].forEach(p=>glow(p[0],p[1],p[2],0xfff1dd,5,2,.5));glow(-9.5,5,0,0xd946ef,3,5,.25);glow(9.5,5,0,0x22d3ee,3,5,.25);
 UI();frame();
-</script><script src="extras.js"></script><script src="street.js"></script><script src="Room.js"></script><script src="ultra.js"></script><script src="clean.js"></script></body></html>
+</script><script src="extras.js"></script><script src="street.js"></script><script src="Room.js"></script><script src="ultra.js"></script><script src="clean.js"></script><script src="world.js"></script><script src="world2.js"></script></body></html>

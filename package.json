@@ -28,6 +28,8 @@
       "street.js",
       "Room.js",
       "ultra.js",
+      "world.js",
+      "world2.js",
       "clean.js",
       "three.min.js"
     ],
