@@ -32,6 +32,8 @@
       "world2.js",
       "chars.js",
       "windows.js",
+      "pcvis.js",
+      "chars2.js",
       "clean.js",
       "three.min.js"
     ],
