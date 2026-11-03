@@ -358,8 +358,11 @@
       }
       for (x = -216; x < 216; x += 36) building(x + 18, 56, 36, 33 + 16.5 * Math.floor(rr() * 3), 24, 'nz', v++);   // второй ряд
       for (x = -300; x < 300; x += 60) building(x + 30, 118, 60, 66 + 33 * Math.floor(rr() * 3), 40, 'nz', v++);   // дальний
-      for (x = -200; x < -10; x += 24) building(x + 12, NZ, 24, 16.5 * (1 + (rr() < .6 ? 1 : 0)), 12, 'pz', v++);    // соседи справа и слева от магазина
-      for (x = 10; x < 200; x += 24) building(x + 12, NZ, 24, 16.5 * (1 + (rr() < .6 ? 1 : 0)), 12, 'pz', v++);
+      // соседние дома справа и слева от магазина: фасад вровень с фасадом магазина (z = NZ), а вся глубина уходит ВНУТРЬ квартала.
+      // Раньше они росли от фасада наружу и торчали «стенками» поперёк тротуара и дороги.
+      var GAP = .06, NBD = 12, ni;
+      for (ni = 7; ni >= 0; ni--) building(-(10 + GAP) - 12 - 24 * ni, NZ - NBD, 24, 16.5 * (1 + (rr() < .6 ? 1 : 0)), NBD, 'pz', v++);   // слева (от дальних к ближним)
+      for (ni = 0; ni < 8; ni++) building((10 + GAP) + 12 + 24 * ni, NZ - NBD, 24, 16.5 * (1 + (rr() < .6 ? 1 : 0)), NBD, 'pz', v++);       // справа
 
       // фонари
       lampGlowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffd9a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });

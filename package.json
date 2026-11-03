@@ -35,6 +35,7 @@
       "pcvis.js",
       "chars2.js",
       "clean.js",
+      "blackout.js",
       "three.min.js"
     ],
     "win": {
