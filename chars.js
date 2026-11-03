@@ -1,30 +1,55 @@
-/* PC МАСТЕР — chars.js (после world2.js): больше деталей и разнообразия у людей.
-   Рюкзаки, сумки, кепки, наушники, шарфы, часы, усы, разный рост и комплекция. */
+/* PC МАСТЕР — chars2.js (после chars.js и pcvis.js): ещё более проработанные люди.
+   Пальцы на руках, шнурки, карманы, принт на футболке, ресницы и губы, бакенбарды, шея и воротник. */
 (function () {
-  if (window.__charsLoaded) return; window.__charsLoaded = 1;
-  function ready() { try { return typeof mkP === 'function' && typeof THREE !== 'undefined'; } catch (e) { return false; } }
+  if (window.__chars2Loaded) return; window.__chars2Loaded = 1;
+  function ready() { try { return typeof mkP === 'function' && window.__charsLoaded && typeof THREE !== 'undefined'; } catch (e) { return false; } }
   function go() {
     var _mk = mkP, PI = Math.PI;
     function M(c, r) { return new THREE.MeshStandardMaterial({ color: c, roughness: r === undefined ? .75 : r, metalness: 0 }); }
     function bx(p, w, h, d, c, x, y, z, r) { var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M(c, r)); m.position.set(x, y, z); m.castShadow = true; p.add(m); return m; }
     function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
-    var COL = [0x1d4ed8, 0xb91c1c, 0x15803d, 0xca8a04, 0x7e22ce, 0x0f766e, 0xea580c, 0x334155];
+    var PR = {};
+    function print(kind, col) {
+      var k = kind + col; if (PR[k]) return PR[k];
+      var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d'); x.clearRect(0, 0, 128, 128);
+      x.fillStyle = col; x.strokeStyle = col; x.lineWidth = 10;
+      if (kind == 0) { x.beginPath(); x.arc(64, 64, 44, 0, PI * 2); x.stroke(); x.fillRect(54, 30, 20, 68); }
+      else if (kind == 1) { for (var i = 0; i < 4; i++) x.fillRect(14, 22 + i * 26, 100, 12); }
+      else if (kind == 2) { x.beginPath(); x.moveTo(64, 12); x.lineTo(116, 112); x.lineTo(12, 112); x.closePath(); x.fill(); }
+      else { x.font = 'bold 74px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('PC', 64, 66); }
+      var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return (PR[k] = t);
+    }
     mkP = function (o) {
       var g = _mk(o); o = o || {};
       try {
+        var ar = g.userData.ar || [], lg = g.userData.lg || [];
+        /* пальцы */
+        ar.forEach(function (arm, i) {
+          var hand = arm.children[arm.children.length - 2], col = hand && hand.material ? hand.material.color.getHex() : 0xe0b99a;
+          if (o.bad) col = 0x0a0a0a;
+          for (var k = 0; k < 4; k++) { var f = bx(arm, .032, .13, .05, col, -.06 + k * .04, -1.47 - (k == 1 || k == 2 ? .02 : 0), .02, .6); f.rotation.x = .12; }
+        });
+        /* шнурки и карманы */
+        lg.forEach(function (l) {
+          if (!o.bad) { bx(l, .2, .02, .15, 0xf8fafc, 0, -1.34, .26, .6); bx(l, .02, .02, .1, 0x9ca3af, 0, -1.33, .2, .6); }
+          var pc = l.children[0] && l.children[0].material ? l.children[0].material.color.getHex() : 0x1f2937;
+          bx(l, .15, .02, .02, new THREE.Color(pc).multiplyScalar(.6).getHex(), 0, -.12, .19, .9);
+        });
         if (o.bad) return g;
-        var fem = false; try { fem = g.children.some(function (c) { return c.geometry && c.geometry.type == 'BoxGeometry' && Math.abs(c.position.y - 3.08) < .01 && Math.abs(c.position.z + .2) < .01; }); } catch (e) { }
-        var w = .92 + Math.random() * .18, h = .94 + Math.random() * .14; g.scale.set(w, h, w);
-        var r = Math.random();
-        if (r < .35) { var bp = pick(COL); bx(g, .6, .8, .26, bp, 0, 2.3, -.36); bx(g, .5, .3, .06, 0x111111, 0, 2.05, -.5); [-.2, .2].forEach(function (x) { bx(g, .07, .75, .05, 0x111111, x, 2.45, -.2); }); }
-        else if (r < .55 || fem && r < .7) { var bc = pick(COL); bx(g, .42, .34, .16, bc, -.74, 1.55, .05); bx(g, .06, 1.1, .06, 0x111111, -.55, 2.15, .02).rotation.z = .28; }
-        var q = Math.random();
-        if (q < .22) { var cc = pick(COL); g.children.slice().forEach(function (c) { var gt = c.geometry && c.geometry.type; if (gt == 'ConeGeometry' || (gt == 'SphereGeometry' && c.position.y > 3.7)) c.visible = false; }); var cap = new THREE.Mesh(new THREE.SphereGeometry(.37, 18, 10, 0, PI * 2, 0, PI * .5), M(cc)); cap.scale.set(1, .85, 1.06); cap.position.set(0, 3.4, -.01); g.add(cap); bx(g, .46, .035, .3, cc, 0, 3.47, .36); }
-        else if (q < .38) { var hp = new THREE.Mesh(new THREE.TorusGeometry(.36, .03, 8, 24, PI), M(0x111111, .4)); hp.position.set(0, 3.38, 0); hp.rotation.z = 0; g.add(hp); [-.36, .36].forEach(function (x) { bx(g, .08, .22, .2, 0x111111, x, 3.34, 0); }); }
-        if (Math.random() < .25) { var sc = new THREE.Mesh(new THREE.TorusGeometry(.2, .07, 8, 18), M(pick(COL))); sc.position.set(0, 3.0, .02); sc.rotation.x = PI / 2; g.add(sc); bx(g, .12, .45, .05, 0x222222, .12, 2.8, .26).material.color.set(0x555555); }
-        if (Math.random() < .5) { var arm = g.userData.ar && g.userData.ar[Math.random() < .5 ? 0 : 1]; if (arm) { var wt = new THREE.Mesh(new THREE.TorusGeometry(.1, .02, 6, 14), M(Math.random() < .5 ? 0x111111 : 0xb0b6c0, .3)); wt.rotation.x = PI / 2; wt.position.set(0, -1.0, 0); arm.add(wt); } }
-        if (!fem && Math.random() < .2) bx(g, .15, .025, .03, 0x2a1a10, 0, 3.225, .295);
-        if (Math.random() < .3) bx(g, .12, .07, .02, 0xffffff, .22, 2.65, .3);
+        /* принт на футболке (ищем воротник футболки: цилиндр r=.17 на уровне шеи) */
+        var tee = g.children.some(function (c) { return c.geometry && c.geometry.type == 'CylinderGeometry' && c.geometry.parameters && Math.abs(c.geometry.parameters.radiusTop - .17) < .005 && Math.abs(c.position.y - 3.0) < .02; });
+        if (tee && Math.random() < .55) {
+          var pl = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34), new THREE.MeshStandardMaterial({ map: print(Math.floor(Math.random() * 4), pick(['#f8fafc', '#fde047', '#22d3ee', '#fb7185'])), transparent: true, roughness: .8 }));
+          pl.position.set(0, 2.55, .292); g.add(pl);
+        }
+        /* лицо: ресницы, губы, бакенбарды */
+        var ey = g.userData.ey;
+        if (ey && Math.random() < .5) { [-.11, .11].forEach(function (x) { bx(ey, .1, .012, .02, 0x15110d, x, .06, .04); }); }
+        bx(g, .09, .016, .02, 0xb4505a, 0, 3.145, .283, .5);
+        if (Math.random() < .4) [-.27, .27].forEach(function (x) { bx(g, .04, .22, .06, 0x2a1a10, x, 3.28, .06, .8).material.color.set(0x2a1a10); });
+        /* шея: тень под подбородком */
+        bx(g, .24, .05, .16, 0x000000, 0, 3.07, .09, 1).material.transparent = true;
+        g.children[g.children.length - 1].material.opacity = .18;
       } catch (e) { }
       return g;
     };
