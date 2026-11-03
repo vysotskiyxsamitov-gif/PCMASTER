@@ -49,6 +49,9 @@
     function st() { var b = bo(); return b ? (b.st | 0) : 0; }
     function isDark() { try { return st() > 0 && !!G && !G.sb; } catch (e) { return false; } }
     function inGame() { try { return !!G && (mode == 'play' || mode == 'term' || mode == 'talk' || mode == 'mg' || mode == 'call'); } catch (e) { return false; } }
+    function inv() { try { return (G && G.ev && G.ev.inv) || null; } catch (e) { return null; } }
+    function hasKey() { var i = inv(), b = bo(); return !!((i && i.key) || (b && b.st >= 4)); }
+    function giveKey() { G.ev = G.ev || {}; var first = !G.ev.inv; G.ev.inv = G.ev.inv || {}; G.ev.inv.key = 1; return first; }
     function allowOut() { try { return (isDark() && inGame()) || P.z > 7.2; } catch (e) { return false; } }
     function safe(f) { try { return f(); } catch (e) { console.error('[blackout]', e); } }
 
@@ -237,7 +240,8 @@
       ['M', 'Поднимешь рубильник — и свет вернётся. Фонарик на телефоне включи, там темно.']
     ];
     var L1b = [
-      ['M', 'Опять пробки выбило? Знаешь, что делать: иди к щитку на улице, слева от входа.']
+      ['M', 'Опять пробки выбило? Знаешь, что делать: иди к щитку на улице, слева от входа.'],
+      ['M', 'Ключ у тебя уже есть, он в инвентаре. Открывай замок и поднимай рубильник.']
     ];
     var L2 = [
       ['M', 'Ну что, дошёл до щитка? Что там?'],
@@ -253,7 +257,8 @@
       if (!G || G.sb || mode != 'play' || CALL || isDark()) return false;
       G.ev = G.ev || {};
       var n = (G.ev.bo && G.ev.bo.n) || 0;
-      G.ev.bo = { st: 1, n: n, key: Math.floor(Math.random() * SP.length), c2: 0, open: 0, hint: 0 };
+      G.ev.bo = { st: 1, n: n, key: Math.floor(Math.random() * SP.length), c2: hasKey() ? 1 : 0, open: 0, hint: 0 };
+      BO.keyHint = false;
       collectDim();
       BO.fk = { t: 0, k: 'off' };
       BO.fl = true;
@@ -315,8 +320,10 @@
       if (mode != 'play' || !b || b.st != 3 || !b.c2) return;
       b.st = 4;
       dropKey();
+      var first = giveKey();
       try { sfx('take'); } catch (e) { }
-      toast('Нашёл ключ! Неси его к щитку на улице.');
+      toast(first ? 'Нашёл ключ! Теперь у тебя есть инвентарь — ключ лежит в нём. Неси его к щитку.' : 'Нашёл ключ! Неси его к щитку на улице.');
+      invUI();
       try { save(); } catch (e) { }
       refresh();
     }
@@ -326,6 +333,13 @@
       var b = bo(), s = st();
       if (P.z < 8.3) { toast('Щиток снаружи — выйди на улицу.'); return; }
       if (!b || !isDark()) { toast('Электрощиток. Автоматы включены, всё в порядке.'); return; }
+      if ((s == 1 || s == 2 || s == 3) && hasKey()) {
+        b.st = 5;
+        try { sfx('panel'); } catch (e) { }
+        toast('Достал ключ из инвентаря — замок открыт! Поднимай рубильник.');
+        try { save(); } catch (e) { }
+        refresh(); return;
+      }
       if (s == 1 || s == 2) { b.st = 2; discover(); return; }
       if (s == 3) { try { sfx('error'); } catch (e) { } toast('Замок не открыть. Ключ где-то в магазине — поищи.'); return; }
       if (s == 4) {
@@ -394,7 +408,7 @@
     function objText() {
       var s = st();
       return s == 1 ? 'Свет погас. Сейчас позвонит Макс — ответь [E]' :
-        s == 2 ? 'Выйди на улицу к электрощитку — он на стене слева от входа' :
+        s == 2 ? (hasKey() ? 'Выйди к щитку на улице (слева от входа) — ключ у тебя в инвентаре' : 'Выйди на улицу к электрощитку — он на стене слева от входа') :
         s == 3 ? 'Щиток заперт. Найди ключ в магазине (ищи блик в темноте)' :
         s == 4 ? 'Ключ у тебя — неси его к щитку на улице' :
         s == 5 ? 'Замок открыт — нажми на рубильник в щитке' : '';
@@ -445,7 +459,7 @@
       var b = bo(), s = st();
       var want = (inGame() && isDark()) ? 1 : 0;
       // ключ существует только когда щиток уже найден запертым и Макс сказал искать
-      var need = !!(b && s == 3 && b.c2 && inGame());
+      var need = !!(b && s == 3 && b.c2 && inGame() && !hasKey());
       if (need && !BO.key) BO.key = mkKey(SP[b.key | 0] || SP[0]);
       if (!need && BO.key) dropKey();
       // недоставленные звонки (например, после загрузки сохранения)
@@ -497,10 +511,28 @@
         slow++;
         sync();
         // дошли до запертого щитка — Макс звонит сам
-        if (st() == 2 && lite() && P.z > 8.3 && Math.hypot(P.x - PX, P.z - (NZ + .6)) < 4.2) discover();
+        if (st() == 2 && lite() && P.z > 8.3 && Math.hypot(P.x - PX, P.z - (NZ + .6)) < 4.2) {
+          if (hasKey()) { if (!BO.keyHint) { BO.keyHint = true; toast('Щиток заперт, но ключ у тебя в инвентаре — нажми E на щитке.'); } }
+          else discover();
+        }
+        invUI();
         schedule(1);
       });
     }, 1000);
+
+    /* ---------- инвентарь: появляется, когда в нём впервые что-то оказалось ---------- */
+    var invEl = document.createElement('div');
+    invEl.className = 'g';
+    invEl.style.cssText = 'position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:30;display:none;pointer-events:none;text-align:center;min-width:92px;padding:8px 10px';
+    try { $('w').appendChild(invEl); } catch (e) { document.body.appendChild(invEl); }
+    var invHtml = '';
+    function invUI() {
+      var i = inv(), show = !!(i && i.key) && mode == 'play' && !PZ;
+      if (!show) { invEl.style.display = 'none'; return; }
+      var h = '<div class="mu" style="margin-bottom:4px">ИНВЕНТАРЬ</div><div style="font-size:30px;line-height:1">🔑</div><div style="font-size:12px;margin-top:3px">Ключ от щитка</div>';
+      if (h !== invHtml) { invHtml = h; invEl.innerHTML = h; }
+      invEl.style.display = 'block';
+    }
 
     /* ---------- запуск ---------- */
     buildPanel();
