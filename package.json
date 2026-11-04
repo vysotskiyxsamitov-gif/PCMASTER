@@ -36,6 +36,7 @@
       "chars2.js",
       "clean.js",
       "blackout.js",
+      "orders.js",
       "three.min.js"
     ],
     "win": {

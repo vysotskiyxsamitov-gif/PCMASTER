@@ -52,7 +52,7 @@
     function inv() { try { return (G && G.ev && G.ev.inv) || null; } catch (e) { return null; } }
     function hasKey() { var i = inv(), b = bo(); return !!((i && i.key) || (b && b.st >= 4)); }
     function giveKey() { G.ev = G.ev || {}; var first = !G.ev.inv; G.ev.inv = G.ev.inv || {}; G.ev.inv.key = 1; return first; }
-    function allowOut() { try { return (isDark() && inGame()) || P.z > 7.2; } catch (e) { return false; } }
+    function allowOut() { try { return (isDark() && inGame()) || P.z > 7; } catch (e) { return false; } }
     function safe(f) { try { return f(); } catch (e) { console.error('[blackout]', e); } }
 
     /* ---------- общие помощники ---------- */

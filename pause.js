@@ -107,7 +107,7 @@ function pauseDraw() {
     ) +
 
     '<div class="mu" style="text-align:center">' +
-    'Esc — продолжить · сборка 03.11-A</div>' +
+    'Esc — продолжить · сборка 04.11-B</div>' +
 
     '</div>';
 }
