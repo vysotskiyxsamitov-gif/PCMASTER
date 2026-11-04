@@ -77,7 +77,7 @@
       var p = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), pm); p.rotation.x = PI / 2; p.position.set(px, 7.78, pz); scene.add(p);
     }); });
     [[-4, -4], [4, -4], [-4, 1], [4, 1], [-4, 5], [4, 5]].forEach(function (a) {
-      var l = new THREE.PointLight(0xffe2b8, .7, 17); l.position.set(a[0], 7.2, a[1]); scene.add(l);
+      var l = new THREE.PointLight(0xffe2b8, .7 * Math.PI, 17); l.position.set(a[0], 7.2, a[1]); scene.add(l);
     });
     bx(scene, 20, .25, .2, 0xe7e2d8, 0, 7.7, -7.9, 0, .8, 0); bx(scene, 20, .25, .2, 0xe7e2d8, 0, 7.7, 7.9, 0, .8, 0);
     bx(scene, .2, .25, 16, 0xe7e2d8, -9.9, 7.7, 0, 0, .8, 0); bx(scene, .2, .25, 16, 0xe7e2d8, 9.9, 7.7, 0, 0, .8, 0);
@@ -85,8 +85,8 @@
     /* ---------- свет: мягче и теплее ---------- */
     scene.children.forEach(function (o) {
       if (o.isPointLight && o.position.y > 8.5) o.visible = false;
-      if (o.isHemisphereLight) { o.intensity = .55; o.color.setHex(0xa9b8e0); o.groundColor.setHex(0x4a3a30); }
-      if (o.isSpotLight) { o.intensity = 1.4; if (o.shadow) o.shadow.radius = 6; }
+      if (o.isHemisphereLight) { o.intensity = .55 * Math.PI; o.color.setHex(0xa9b8e0); o.groundColor.setHex(0x4a3a30); }
+      if (o.isSpotLight) { o.intensity = 1.4 * Math.PI; if (o.shadow) o.shadow.radius = 6; }
     });
     R.toneMappingExposure = .9;
     if (scene.fog) scene.fog.color.setHex(0x1b2030);
@@ -126,7 +126,7 @@
       h.userData.sec = 1; shF.add(h);
     });
     [[-9.0, 2.6, -5], [-9.0, 2.6, 0], [-9.0, 2.6, 5]].forEach(function (a) {
-      var l = new THREE.PointLight(0xffe2b8, .4, 7); l.position.set(a[0], a[1], a[2]); scene.add(l);
+      var l = new THREE.PointLight(0xffe2b8, .4 * Math.PI, 7); l.position.set(a[0], a[1], a[2]); scene.add(l);
     });
 
     // ящики-«обманки» для сцены избиения — на новых местах

@@ -11,7 +11,8 @@
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8",
-    "three": "0.128.0"
+    "esbuild": "^0.24.0",
+    "three": "0.170.0"
   },
   "build": {
     "appId": "com.pcmaster.game",
@@ -37,7 +38,8 @@
       "clean.js",
       "blackout.js",
       "orders.js",
-      "three.min.js"
+      "post.js",
+      "three.bundle.js"
     ],
     "win": {
       "target": "nsis"

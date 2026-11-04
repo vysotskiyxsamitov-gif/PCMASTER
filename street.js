@@ -166,7 +166,7 @@
   }
   function mount() {
     var tex = new THREE.CanvasTexture(cv);
-    tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
+    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
 
     // прячем старое статичное окно на этом месте
     scene.children.forEach(function (o) {
