@@ -1,9 +1,10 @@
 /* PC МАСТЕР — «ультра» эффекты поверх 3D-картинки:
      • разводы (шлейф) при быстром повороте камеры — opt.mb
      • мягкое свечение неона и ярких поверхностей — opt.bl
+   Размытие — усреднение нескольких сдвинутых копий кадра вдоль направления поворота (гладкое, без «квадратных» призраков).
    Всё делается в обычном 2D-холсте поверх сцены, сам 3D-рендер не меняется.
    Если игра начинает тормозить, эффекты сами выключаются (по одному), включить обратно можно в настройках. */
-var FX = { cv: null, x: null, acc: null, ax: null, bl: null, bx: null, bOk: false, bc: 0, pq: null, last: 0, tt: 0, n: 0, sum: 0, slow: 0, filt: null };
+var FX = { pr: null, cv: null, x: null, acc: null, ax: null, bl: null, bx: null, bOk: false, bc: 0, pq: null, last: 0, tt: 0, n: 0, sum: 0, slow: 0, filt: null };
 
 function fxInit() {
   var GL = R.domElement, cv = document.createElement('canvas');
@@ -17,7 +18,7 @@ function fxInit() {
 
 function fxHide() {
   if (FX.cv && FX.cv.style.display != 'none') FX.cv.style.display = 'none';
-  FX.pq = null; FX.tt = 0;
+  FX.pq = null; FX.pr = null; FX.tt = 0;
 }
 
 function fxFrame() {
@@ -40,28 +41,31 @@ function fxFrame() {
   if (!(dt > 0)) dt = .016;
   dt = Math.min(dt, .1);
 
-  // скорость поворота камеры (рад/с) → сила шлейфа
-  var q = cam.quaternion, sp = 0;
-  if (FX.pq) {
-    var d = Math.abs(q.x * FX.pq[0] + q.y * FX.pq[1] + q.z * FX.pq[2] + q.w * FX.pq[3]);
-    sp = 2 * Math.acos(Math.min(1, d)) / dt;
+  // смещение картинки между кадрами (px) из поворота камеры: yaw → по X, pitch → по Y
+  var cr = cam.rotation, mdx = 0, mdy = 0;
+  if (FX.pr) {
+    var dyaw = Math.atan2(Math.sin(cr.y - FX.pr[0]), Math.cos(cr.y - FX.pr[0])), dpit = cr.x - FX.pr[1];
+    var f = (h / 2) / Math.tan(cam.fov * Math.PI / 360);
+    mdx = -f * dyaw; mdy = -f * dpit;
   }
-  FX.pq = [q.x, q.y, q.z, q.w];
-  var t = useT ? Math.min(1, Math.max(0, (sp - .5) / 2.6)) : 0;
-  FX.tt += (t - FX.tt) * Math.min(1, dt * 18);
-  var a = 1 - .74 * FX.tt;
+  FX.pr = [cr.y, cr.x];
+  var len = Math.hypot(mdx, mdy);
+  /* плавное включение: слабые движения не размываем; ограничиваем длину шлейфа */
+  var t = useT ? Math.min(1, Math.max(0, (len - 3) / 25)) : 0;
+  FX.tt += (t - FX.tt) * Math.min(1, dt * 20);
+  var cap = h * .06, k = len > cap * 2 ? cap * 2 / len : 1;        // не больше ~6% высоты в каждую сторону
+  var ox = mdx * k * .5 * FX.tt, oy = mdy * k * .5 * FX.tt, tl = Math.hypot(ox, oy);
 
-  var cx = FX.x, base = GL;
-  if (useT) { // копим кадры: старая картинка просвечивает сквозь новую — получается шлейф
-    var tg = useB ? FX.acc : FX.cv, tx = useB ? FX.ax : cx;
-    tx.globalCompositeOperation = 'source-over'; tx.globalAlpha = a;
-    tx.drawImage(GL, 0, 0);
-    tx.globalAlpha = 1;
-    base = tg;
-  }
-  if (useB || !useT) {
-    cx.globalCompositeOperation = 'source-over'; cx.globalAlpha = 1;
-    cx.drawImage(base, 0, 0);
+  var cx = FX.x;
+  cx.globalCompositeOperation = 'source-over'; cx.globalAlpha = 1;
+  cx.drawImage(GL, 0, 0);                                           // кадр как есть
+  if (useT && tl > 1.2) {                                           // настоящее размытие: усредняем сдвинутые копии кадра вдоль движения
+    var N = Math.max(3, Math.min(9, Math.ceil(tl / 5)));
+    for (var i = 1; i <= N; i++) {
+      cx.globalAlpha = 1 / (i + 1);
+      cx.drawImage(GL, ox * i / N, oy * i / N);
+    }
+    cx.globalAlpha = 1;
   }
   if (useB) { // свечение: яркие места → уменьшенная размытая копия → добавляем поверх
     if ((FX.bc++ & 1) == 0) {
