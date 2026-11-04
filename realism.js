@@ -3,7 +3,7 @@
      0 — выкл (как раньше)
      1 — средний: рельеф (bump) на всех текстурах, реальные тени от солнца через окна (пятна света = настоящие тени
          окон и рам), больше предметов отбрасывают и принимают тени, мягче края теней, чёткие текстуры
-     2 — высокий: + настоящее отражение комнаты в полу (зеркальный проход рендера с размытием и Френелем)
+     2 — высокий: + карта теней 4096 у солнца и мягкие тени от потолочных ламп над верстаком
    Если FPS падает — уровень снижается сам. Выбор запоминается. */
 (function () {
   if (window.__realismLoaded) return;
@@ -17,7 +17,7 @@
   function go() {
     var LV = 2, NAMES = ['выкл', 'средний', 'высокий'];
     try { var sv = localStorage.getItem('pcrz'); if (sv !== null && sv !== '') LV = Math.max(0, Math.min(2, parseInt(sv, 10) || 0)); } catch (e) { }
-    var seenMat = new WeakSet(), seenMesh = new WeakSet(), sun = null, floor = null, ovl = null, rt = null, vcam = null;
+    var seenMat = new WeakSet(), seenMesh = new WeakSet(), sun = null;
 
     /* ---------- общие ---------- */
     function findSun() {
@@ -74,6 +74,7 @@
       });
       safe(applySun);
       safe(hidePatches);
+      safe(applyLights);
     }
 
     /* ---------- 2. настоящее солнце: тени окон ---------- */
@@ -103,99 +104,30 @@
       });
     }
 
-    /* ---------- 3. отражение в полу ---------- */
-    var refl = { M: new THREE.Matrix4(), N: new THREE.Vector3(0, 1, 0), P: new THREE.Vector3(), cw: new THREE.Vector3(), v: new THREE.Vector3(), la: new THREE.Vector3(), tg: new THREE.Vector3(), rm: new THREE.Matrix4(), pl: new THREE.Plane(), cp: new THREE.Vector4(), q: new THREE.Vector4(), bs: new THREE.Vector2(), dir: new THREE.Vector3() };
-    var fy = 0;
-    function findFloor() {
-      if (floor) return floor;
-      var best = 0;
-      scene.children.forEach(function (o) {
-        if (o.isMesh && isFloorLike(o) && o.parent === scene) {
-          var p = o.geometry.parameters, a = (p.width || 0) * (p.height || 0) * o.scale.x * o.scale.y;
-          if (a > best && a < 700 && Math.abs(o.position.x) < 3 && Math.abs(o.position.z) < 3 && (p.width * o.scale.x) > 12) { best = a; floor = o; }
+    /* ---------- 3. свет ламп: мягкие тени под потолочными лампами (уровень 2) ---------- */
+    var spLow = false;
+    function applyLights() {
+      scene.traverse(function (o) {
+        /* основной прожектор стоял ВЫШЕ потолка — с настоящими тенями потолок закрыл бы его. Опускаем под потолок (y 7.8). */
+        if (o.isSpotLight && !o.__rzlow && o.position.y > 7.7) { o.__rzlow = 1; o.__rzy = o.position.y; o.position.y = 7.45; }
+        if (o.isPointLight && o.position.y > 6.5 && o.position.y < 7.7 && !o.__rzp) {
+          var over = (o.position.x === -4 || o.position.x === 4) && o.position.z === -4;   // две лампы над верстаком
+          o.__rzp = 1; o.__rzOn = over;
         }
-      });
-      return floor;
-    }
-    function buildOverlay() {
-      var f = findFloor(); if (!f) return false;
-      var p = f.geometry.parameters;
-      fy = f.position.y + .004;
-      var mat = new THREE.ShaderMaterial({
-        transparent: true, depthWrite: false,
-        uniforms: { tRef: { value: null }, tm: { value: new THREE.Matrix4() }, k: { value: .38 } },
-        vertexShader: 'uniform mat4 tm; varying vec4 vUv; varying vec3 vView; void main(){ vec4 wp = modelMatrix * vec4(position,1.0); vUv = tm * wp; vView = cameraPosition - wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }',
-        fragmentShader: 'uniform sampler2D tRef; uniform float k; varying vec4 vUv; varying vec3 vView; void main(){ vec3 v = normalize(vView); float f = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0); vec4 c = texture2DProj(tRef, vUv, 1.6); float a = k * (0.22 + 0.78 * f); gl_FragColor = vec4(c.rgb, a); }'
-      });
-      ovl = new THREE.Mesh(new THREE.PlaneGeometry(p.width, p.height, 1, 1), mat);
-      ovl.rotation.copy(f.rotation); ovl.scale.copy(f.scale); ovl.position.set(f.position.x, fy, f.position.z);
-      ovl.renderOrder = 1; ovl.frustumCulled = false; ovl.visible = false; scene.add(ovl);
-      vcam = new THREE.PerspectiveCamera();
-      return true;
-    }
-    function makeRT() {
-      var s = R.getDrawingBufferSize(refl.bs), w = Math.max(256, Math.floor(s.x * .5)), h = Math.max(144, Math.floor(s.y * .5));
-      if (rt && Math.abs(rt.width - w) < 40 && Math.abs(rt.height - h) < 40) return;
-      if (rt) rt.dispose();
-      rt = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, generateMipmaps: true });
-      rt.texture.encoding = THREE.sRGBEncoding;
-      ovl.material.uniforms.tRef.value = rt.texture;
-    }
-    function reflectPass() {
-      var r = refl;
-      cam.updateMatrixWorld(true);
-      r.P.set(0, fy, 0); r.cw.setFromMatrixPosition(cam.matrixWorld);
-      r.v.subVectors(r.P, r.cw);
-      if (r.v.dot(r.N) > 0) return false;                      // камера под полом
-      cam.getWorldDirection(r.dir); if (r.dir.y > .6) return false; // смотрим вверх — пола не видно
-      r.rm.extractRotation(cam.matrixWorld);
-      r.v.reflect(r.N).negate(); r.v.add(r.P);
-      r.la.set(0, 0, -1).applyMatrix4(r.rm).add(r.cw);
-      r.tg.subVectors(r.P, r.la); r.tg.reflect(r.N).negate(); r.tg.add(r.P);
-      vcam.position.copy(r.v); vcam.up.set(0, 1, 0).applyMatrix4(r.rm).reflect(r.N); vcam.lookAt(r.tg);
-      vcam.far = cam.far; vcam.near = cam.near;
-      vcam.updateMatrixWorld(); vcam.projectionMatrix.copy(cam.projectionMatrix);
-      var tm = ovl.material.uniforms.tm.value;
-      tm.set(.5, 0, 0, .5, 0, .5, 0, .5, 0, 0, .5, .5, 0, 0, 0, 1);
-      tm.multiply(vcam.projectionMatrix); tm.multiply(vcam.matrixWorldInverse);
-      /* наклонная плоскость отсечения: всё, что ниже пола, не попадает в отражение */
-      r.pl.setFromNormalAndCoplanarPoint(r.N, r.P); r.pl.applyMatrix4(vcam.matrixWorldInverse);
-      r.cp.set(r.pl.normal.x, r.pl.normal.y, r.pl.normal.z, r.pl.constant);
-      var pm = vcam.projectionMatrix, e = pm.elements;
-      r.q.x = (Math.sign(r.cp.x) + e[8]) / e[0]; r.q.y = (Math.sign(r.cp.y) + e[9]) / e[5]; r.q.z = -1; r.q.w = (1 + e[10]) / e[14];
-      r.cp.multiplyScalar(2 / r.cp.dot(r.q));
-      e[2] = r.cp.x; e[6] = r.cp.y; e[10] = r.cp.z + 1 - .003; e[14] = r.cp.w;
-      makeRT();
-      var vis = ovl.visible, au = R.shadowMap.autoUpdate, tgt = R.getRenderTarget();
-      ovl.visible = false; R.shadowMap.autoUpdate = false;
-      R.setRenderTarget(rt); R.clear(); _render(scene, vcam);
-      R.setRenderTarget(tgt); R.shadowMap.autoUpdate = au; ovl.visible = true;
-      return true;
-    }
-
-    var _render = R.render.bind(R), inRef = 0, errs = 0;
-    R.render = function (s, c) {
-      if (LV >= 2 && s === scene && c === cam && !inRef && mode != 'menu') {
-        try {
-          if (!ovl && !buildOverlay()) { LV = 1; console.warn('[realism] пол не найден — отражения выключены'); }
-          else if (ovl) {
-            inRef = 1;
-            var ok = reflectPass();
-            inRef = 0;
-            if (!ok) ovl.visible = false;
+        if (o.isPointLight && o.__rzOn) {
+          var want = LV >= 2;
+          if (o.castShadow !== want) {
+            o.castShadow = want;
+            if (want) { o.shadow.mapSize.set(1024, 1024); o.shadow.camera.near = .6; o.shadow.camera.far = 17; o.shadow.bias = -.002; o.shadow.normalBias = .04; o.shadow.radius = 4; }
+            if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
           }
-        } catch (e) {
-          inRef = 0; errs++; console.error('[realism] отражение отключено:', e);
-          try { R.setRenderTarget(null); R.shadowMap.autoUpdate = true; } catch (e2) { }
-          if (ovl) ovl.visible = false; LV = 1; draw();
         }
-      } else if (ovl && (LV < 2 || mode == 'menu')) ovl.visible = false;
-      return _render(s, c);
-    };
+      });
+    }
 
     /* ---------- переключатель и авто-снижение ---------- */
     function draw() { try { localStorage.setItem('pcrz', String(LV)); } catch (e) { } try { if (typeof pauseDraw == 'function' && document.getElementById('pz')) pauseDraw(); } catch (e) { } }
-    function set(v) { LV = v; if (LV < 2 && ovl) ovl.visible = false; sweep(); draw(); }
+    function set(v) { LV = v; sweep(); draw(); }
     window.__rz = { get: function () { return LV; }, name: function () { return NAMES[LV]; }, set: set, cycle: function () { set((LV + 1) % 3); try { toast('Реализм: ' + NAMES[LV]); } catch (e) { } } };
     addEventListener('keydown', function (e) { if (e.code == 'F8' && !e.repeat) { e.preventDefault(); window.__rz.cycle(); } });
 

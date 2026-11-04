@@ -38,6 +38,7 @@
       "blackout.js",
       "orders.js",
       "realism.js",
+      "detail.js",
       "three.min.js"
     ],
     "win": {
