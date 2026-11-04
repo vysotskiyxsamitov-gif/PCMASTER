@@ -17,7 +17,7 @@
       else if (kind == 1) { for (var i = 0; i < 4; i++) x.fillRect(14, 22 + i * 26, 100, 12); }
       else if (kind == 2) { x.beginPath(); x.moveTo(64, 12); x.lineTo(116, 112); x.lineTo(12, 112); x.closePath(); x.fill(); }
       else { x.font = 'bold 74px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('PC', 64, 66); }
-      var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return (PR[k] = t);
+      var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return (PR[k] = t);
     }
     mkP = function (o) {
       var g = _mk(o); o = o || {};

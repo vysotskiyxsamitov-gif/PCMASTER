@@ -70,7 +70,7 @@
       var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
       g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.3, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
       x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-      var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
     })();
 
     /* =====================================================================
@@ -148,7 +148,7 @@
     }
 
     /* фонарик на телефоне: создаём заранее с нулевой яркостью, чтобы число ламп не менялось посреди игры */
-    var fl = new THREE.SpotLight(0xfff1d6, 0, 26, .62, .65, 0);
+    var fl = new THREE.SpotLight(0xfff1d6, 0, 26, .62, .65, 1.1);
     fl.__bof = 1; fl.position.set(.12, -.12, 0); fl.target.position.set(.12, -.2, -6);
     cam.add(fl); cam.add(fl.target);
 
@@ -496,7 +496,7 @@
           if (BO.lv == 0 && !BO.fk && dimList.length) restoreDim();
         }
         // фонарик
-        var fw = (BO.fl && BO.lv > .4) ? 2.8 * Math.PI * Math.min(1, (BO.lv - .4) / .4) : 0;
+        var fw = (BO.fl && BO.lv > .4) ? 2.8 * Math.min(1, (BO.lv - .4) / .4) : 0;
         fl.intensity += (fw - fl.intensity) * Math.min(1, dt * 10);
         // блик ключа
         if (BO.key) { var g = BO.key.userData.glow; g.material.opacity = .5 + .35 * Math.sin(BO.t * 3.2); var sc = .9 + .25 * Math.sin(BO.t * 3.2); g.scale.set(sc, sc, 1); BO.key.rotation.y += dt * .6; }

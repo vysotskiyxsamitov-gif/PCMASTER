@@ -108,7 +108,7 @@ function phoneBuild() {
 function phoneEnsure() {
   if (PHN) return;
   PHC = document.createElement('canvas'); PHC.width = 192; PHC.height = 384;
-  PHX = new THREE.CanvasTexture(PHC); PHX.colorSpace = THREE.SRGBColorSpace; PHX.anisotropy = 4;
+  PHX = new THREE.CanvasTexture(PHC); PHX.encoding = THREE.sRGBEncoding; PHX.anisotropy = 4;
   drawPhone('off', 0);
   PHN = phoneBuild(); PHN.visible = false; cam.add(PHN);
 }

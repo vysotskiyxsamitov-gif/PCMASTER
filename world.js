@@ -34,7 +34,7 @@
       var c = document.createElement('canvas'); c.width = w; c.height = h;
       fn(c.getContext('2d'), w, h);
       var t = new THREE.CanvasTexture(c);
-      t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(rx || 1, ry || 1); t.anisotropy = 8;
       return t;
     }
@@ -185,7 +185,7 @@
       vertexShader: 'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
       fragmentShader: 'uniform vec3 top;uniform vec3 hor;uniform vec3 sunDir;uniform vec3 sunCol;uniform float glow;varying vec3 vP;' +
         'void main(){vec3 n=normalize(vP);float h=clamp(n.y,0.0,1.0);vec3 c=mix(hor,top,pow(h,0.55));float s=max(dot(n,sunDir),0.0);' +
-        'c+=sunCol*(pow(s,40.0)*0.9+pow(s,6.0)*0.25)*glow;if(n.y<0.0)c=hor*0.85;gl_FragColor=vec4(c,1.0);#include <colorspace_fragment>\n}',
+        'c+=sunCol*(pow(s,40.0)*0.9+pow(s,6.0)*0.25)*glow;if(n.y<0.0)c=hor*0.85;gl_FragColor=vec4(c,1.0);#include <encodings_fragment>\n}',
       side: THREE.BackSide, depthWrite: false, fog: false
     });
     domeMat.userData.shared = 1;
@@ -620,7 +620,7 @@
       stars.material.opacity = ENV.starF;
       sunL.position.copy(dayF > .35 ? sunDir : mv).multiplyScalar(60);
       sunL.color.setRGB(1, lerp(.96, .72, low), lerp(.88, .5, low)); if (dayF < .35) sunL.color.setRGB(.55, .65, 1);
-      sunL.intensity = ((.85 * dayF * (1 - WX.cloud * .7) + .16 * (1 - dayF) * (1 - WX.cloud * .5)) + WX.flash * 2.2) * Math.PI;
+      sunL.intensity = (.85 * dayF * (1 - WX.cloud * .7) + .16 * (1 - dayF) * (1 - WX.cloud * .5)) + WX.flash * 2.2;
 
       // облака
       var cOp = clamp(.12 + WX.cloud * .8, 0, .95), cc = tmpC.setRGB(1, 1, 1).lerp(C(0x6b7384), WX.rain * .7 + WX.cloud * .15).lerp(C(0xf0b090), (1 - dayF) * dayF * 1.4).multiplyScalar(lerp(.12, 1, dayF));

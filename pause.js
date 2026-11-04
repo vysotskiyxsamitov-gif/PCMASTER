@@ -82,6 +82,11 @@ function pauseDraw() {
     ) +
 
     pzBtn(
+      'Реализм (тени, отражения): ' + (window.__rz ? window.__rz.name() : 'нет'),
+      'window.__rz&&window.__rz.cycle();pauseDraw()'
+    ) +
+
+    pzBtn(
       'Графика: ' + (opt.q ? 'высокая' : 'экономная'),
       'opt.q=!opt.q;rs();pauseDraw()'
     ) +
@@ -107,7 +112,7 @@ function pauseDraw() {
     ) +
 
     '<div class="mu" style="text-align:center">' +
-    'Esc — продолжить · сборка 04.11-B</div>' +
+    'F8 — реализм · Esc — продолжить · сборка 04.11-C</div>' +
 
     '</div>';
 }
