@@ -85,11 +85,11 @@
         if (!s.castShadow) {
           s.castShadow = true;
           var c = s.shadow.camera; c.left = -13; c.right = 13; c.top = 13; c.bottom = -13; c.near = 5; c.far = 140; c.updateProjectionMatrix();
-          s.shadow.mapSize.set(LV >= 2 ? 4096 : 2048, LV >= 2 ? 4096 : 2048);
+          s.shadow.mapSize.set(LV >= 2 ? 2048 : 1024, LV >= 2 ? 2048 : 1024);
           s.shadow.bias = -.0006; s.shadow.normalBias = .05; s.shadow.radius = 3;
           if (s.shadow.map) { s.shadow.map.dispose(); s.shadow.map = null; }
-        } else if (s.shadow.mapSize.x != (LV >= 2 ? 4096 : 2048)) {
-          s.shadow.mapSize.set(LV >= 2 ? 4096 : 2048, LV >= 2 ? 4096 : 2048);
+        } else if (s.shadow.mapSize.x != (LV >= 2 ? 2048 : 1024)) {
+          s.shadow.mapSize.set(LV >= 2 ? 2048 : 1024, LV >= 2 ? 2048 : 1024);
           if (s.shadow.map) { s.shadow.map.dispose(); s.shadow.map = null; }
         }
       } else if (s.castShadow) { s.castShadow = false; if (s.shadow.map) { s.shadow.map.dispose(); s.shadow.map = null; } }

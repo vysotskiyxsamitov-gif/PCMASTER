@@ -268,42 +268,78 @@
     });
 
 
-    /* открытая книга на наклонной подставке: на страницах видны коды Морзе */
-    safe(function () {
-      var bk = null; scene.children.forEach(function (o) { if (!bk && o.type == 'Group' && o.userData && o.userData.act && Math.abs(o.position.x - 2.3) < .05 && Math.abs(o.position.z + 4.5) < .05) bk = o; });
-      if (!bk) return;
+    /* НАСТОЯЩАЯ книга: переплёт, изогнутые страницы, блок страниц с торцами, закладка, подставка */
+    function realBook(bk) {
       bk.children.forEach(function (c) { if (c.material && !(c.material.transparent && c.material.opacity === 0)) c.visible = false; });
       var F = (window.__orders && window.__orders.faults) || [];
-      function page(items, title, num) {
-        var c = document.createElement('canvas'); c.width = 512; c.height = 700; var x = c.getContext('2d');
-        var gr = x.createLinearGradient(0, 0, 512, 0); gr.addColorStop(0, '#e9dfc4'); gr.addColorStop(.5, '#f6efd9'); gr.addColorStop(1, '#e9dfc4'); x.fillStyle = gr; x.fillRect(0, 0, 512, 700);
-        x.fillStyle = '#3b2a14'; x.font = 'bold 30px serif'; x.textAlign = 'center'; x.fillText(title, 256, 52); x.fillRect(60, 66, 392, 3);
+      function page(items, title, num, left) {
+        var c = document.createElement('canvas'); c.width = 640; c.height = 880; var x = c.getContext('2d');
+        var gr = x.createLinearGradient(0, 0, 640, 0);
+        if (left) { gr.addColorStop(0, '#efe6cc'); gr.addColorStop(.9, '#f7f0dc'); gr.addColorStop(1, '#d9ceb0'); } else { gr.addColorStop(0, '#d9ceb0'); gr.addColorStop(.1, '#f7f0dc'); gr.addColorStop(1, '#efe6cc'); }
+        x.fillStyle = gr; x.fillRect(0, 0, 640, 880);
+        for (var i = 0; i < 900; i++) { x.fillStyle = 'rgba(120,90,40,' + (Math.random() * .04) + ')'; x.fillRect(Math.random() * 640, Math.random() * 880, 2, 2); }
+        x.fillStyle = '#3b2a14'; x.font = 'bold 38px serif'; x.textAlign = 'center'; x.fillText(title, 320, 70);
+        x.fillStyle = '#9a3412'; x.fillRect(90, 88, 460, 3);
         items.forEach(function (f, i) {
-          var y = 120 + i * 140;
-          x.textAlign = 'left'; x.fillStyle = '#9a3412'; x.font = 'bold 40px monospace'; x.fillText(f.code.split('').join(' '), 36, y);
-          x.fillStyle = '#1f2937'; x.font = 'bold 24px serif'; x.fillText(f.n, 36, y + 34);
-          x.fillStyle = '#44403c'; x.font = '21px serif'; var w = String(f.sol).split(' '), ln = '', yy = y + 62;
-          w.forEach(function (t) { if (x.measureText(ln + t).width > 440) { x.fillText(ln, 36, yy); ln = ''; yy += 24; } ln += t + ' '; }); x.fillText(ln, 36, yy);
-          x.fillStyle = 'rgba(0,0,0,.15)'; x.fillRect(36, y + 106, 440, 1);
+          var y = 160 + i * 168;
+          x.textAlign = 'left'; x.fillStyle = '#9a3412'; x.font = 'bold 50px monospace'; x.fillText(f.code.split('').map(function (ch) { return ch == '·' || ch == '.' ? '●' : '▬'; }).join(' '), 60, y);
+          x.fillStyle = '#1f2937'; x.font = 'bold 30px serif'; x.fillText(f.n, 60, y + 44);
+          x.fillStyle = '#44403c'; x.font = '26px serif'; var w = String(f.sol).split(' '), ln = '', yy = y + 80;
+          w.forEach(function (t) { if (x.measureText(ln + t).width > 520) { x.fillText(ln, 60, yy); ln = ''; yy += 30; } ln += t + ' '; }); x.fillText(ln, 60, yy);
+          x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(60, y + 124, 520, 1);
         });
-        x.fillStyle = '#78716c'; x.font = '18px serif'; x.textAlign = 'center'; x.fillText('— ' + num + ' —', 256, 680);
-        var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
+        x.fillStyle = '#78716c'; x.font = 'italic 22px serif'; x.textAlign = 'center'; x.fillText(num, 320, 850);
+        var sh = x.createLinearGradient(left ? 640 : 0, 0, left ? 540 : 100, 0); sh.addColorStop(0, 'rgba(60,40,10,.35)'); sh.addColorStop(1, 'rgba(60,40,10,0)'); x.fillStyle = sh; x.fillRect(left ? 540 : 0, 0, 100, 880);
+        var t = new THREE.CanvasTexture(x.canvas); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
       }
       var n = Math.ceil(F.length / 2) || 4, A = F.slice(0, n), Bp = F.slice(n);
+      var edgeC = document.createElement('canvas'); edgeC.width = 8; edgeC.height = 64; var ex = edgeC.getContext('2d'); ex.fillStyle = '#efe6cc'; ex.fillRect(0, 0, 8, 64);
+      for (var i = 0; i < 64; i += 2) { ex.fillStyle = 'rgba(120,100,60,' + (.15 + Math.random() * .2) + ')'; ex.fillRect(0, i, 8, 1); }
+      var edgeT = new THREE.CanvasTexture(edgeC);
+      var edgeM = new THREE.MeshStandardMaterial({ map: edgeT, roughness: .95 });
+      var cover = new THREE.MeshStandardMaterial({ color: 0x6b1d1d, roughness: .55, metalness: .05 });
+      var gold = new THREE.MeshStandardMaterial({ color: 0xd4a437, roughness: .35, metalness: .7 });
       var st = new THREE.Group(); st.position.set(0, .02, 0); bk.add(st);
-      var wood = M(0x4a3020, .6);
-      B(st, .86, .03, .5, wood, 0, .015, 0); var back = B(st, .8, .02, .5, wood, 0, .25, -.2); back.rotation.x = .62;       // подставка
-      B(st, .8, .04, .06, wood, 0, .06, .24);
-      var tilt = new THREE.Group(); tilt.position.set(0, .22, -.03); tilt.rotation.x = 1.0; st.add(tilt);
-      var cover = M(0x7f1d1d, .7);
-      B(tilt, .74, .012, .52, cover, 0, -.012, 0);
+      var wood = M(0x4a3020, .55);
+      /* подставка-пюпитр */
+      B(st, .9, .025, .52, wood, 0, .0125, 0);
+      var back = B(st, .86, .02, .5, wood, 0, .17, -.16); back.rotation.x = .75;
+      B(st, .86, .04, .05, wood, 0, .05, .25); B(st, .86, .02, .06, wood, 0, .03, .22);
+      var tilt = new THREE.Group(); tilt.position.set(0, .2, -.04); tilt.rotation.x = .75; st.add(tilt);
+      /* твёрдая обложка */
+      B(tilt, .76, .014, .52, cover, 0, 0, 0); B(tilt, .03, .02, .53, new THREE.MeshStandardMaterial({ color: 0x4a1313, roughness: .5 }), 0, .003, 0);
+      /* страницы: изогнутые поверхности, толщина стопки уменьшается к краю */
+      var PWd = .34, PH = .47, SEG = 24;
       [-1, 1].forEach(function (s) {
-        var pg = new THREE.Mesh(new THREE.PlaneGeometry(.34, .47), new THREE.MeshStandardMaterial({ map: page(s < 0 ? A : Bp, s < 0 ? 'Сигналы — I' : 'Сигналы — II', s < 0 ? 1 : 2), roughness: .9, side: THREE.DoubleSide }));
-        pg.rotation.x = -PI / 2; pg.position.set(s * .175, .006, 0); pg.rotation.z = s * .03; pg.castShadow = false; pg.receiveShadow = true; tilt.add(pg);
-        for (var k = 0; k < 4; k++) B(tilt, .34, .0025, .47, M(0xf1e8cf, .9), s * .175, .0 + k * .0025, 0).scale.x = 1 - k * .01;
+        var geo = new THREE.PlaneGeometry(PWd, PH, SEG, 1), pos = geo.attributes.position;
+        for (var i = 0; i < pos.count; i++) {
+          var u = (pos.getX(i) + PWd / 2) / PWd;                       // 0..1 слева направо
+          var d = s < 0 ? (1 - u) : u;                                  // расстояние от корешка: 0 у корешка, 1 у края
+          var h = .028 * (1 - Math.pow(d, 2.2)) + .004 + .012 * Math.sin(Math.min(1, d * 3) * Math.PI / 2) * (1 - d) - .012 * Math.pow(1 - d, 3);
+          pos.setZ(i, h);
+        }
+        geo.computeVertexNormals();
+        var mt = new THREE.MeshStandardMaterial({ map: page(s < 0 ? A : Bp, s < 0 ? 'Сигналы · I' : 'Сигналы · II', s < 0 ? '— 1 —' : '— 2 —', s < 0), roughness: .92 });
+        var pg = new THREE.Mesh(geo, mt); pg.rotation.x = -PI / 2; pg.position.set(s * (PWd / 2 + .012), .008, 0); pg.castShadow = false; pg.receiveShadow = true; tilt.add(pg);
+        /* торцы блока: ступени и боковина со слоями */
+        for (var k = 0; k < 5; k++) {
+          var wk = PWd - k * .004, hk = .026 - k * .003;
+          var side = new THREE.Mesh(new THREE.BoxGeometry(wk, hk, PH - .012 + (k % 2) * .004), [edgeM, edgeM, edgeM, edgeM, edgeM, edgeM]);
+          side.position.set(s * (PWd / 2 + .012 + k * .002), .008 + hk / 2 - .002, 0); side.castShadow = true; side.receiveShadow = true; tilt.add(side);
+        }
+        /* кант обложки (слегка выступает) */
+        B(tilt, PWd + .06, .012, .02, cover, s * (PWd / 2 + .012 + .01), .0075, -PH / 2 - .01); B(tilt, PWd + .06, .012, .02, cover, s * (PWd / 2 + .012 + .01), .0075, PH / 2 + .01);
+        B(tilt, .02, .012, PH + .04, cover, s * (PWd + .035), .0075, 0);
       });
-      B(tilt, .012, .016, .5, M(0x3b0d0d, .7), 0, .002, 0);                                                                // корешок
-    });
+      /* корешок и закладка */
+      var sp = C(tilt, .012, .012, .52, new THREE.MeshStandardMaterial({ color: 0x4a1313, roughness: .5 }), 0, .012, 0); sp.rotation.x = PI / 2;
+      var rb = B(tilt, .012, .002, .2, M(0xdc2626, .6), .03, .026, PH / 2 + .1); rb.rotation.z = .1;
+    }
+    (function retry(n) {
+      var bk = null; scene.children.forEach(function (o) { if (!bk && o.type == 'Group' && o.userData && o.userData.act && Math.abs(o.position.x - 2.3) < .05 && Math.abs(o.position.z + 4.5) < .05) bk = o; });
+      if (bk) { if (!bk.userData.__real) { bk.userData.__real = 1; safe(function () { realBook(bk); }); } }
+      else if (n < 120) setTimeout(function () { retry(n + 1); }, 500);
+    })(0);
 
     /* ---------- анимации мебели ---------- */
     var last = performance.now();

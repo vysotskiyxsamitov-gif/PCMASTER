@@ -19,43 +19,46 @@
 
     /* ---------- 1. паркет ---------- */
     function parquet() {
-      var S = 1024, PW = 128, N = S / PW;
+      var S = 1024, PW = 128, N = S / PW, TP = Math.PI * 2;
       var cA = cvs(S, S), xa = cA.getContext('2d'), cR = cvs(S, S), xr = cR.getContext('2d'), cB = cvs(S, S), xb = cB.getContext('2d');
-      xa.fillStyle = '#2b1a0e'; xa.fillRect(0, 0, S, S); xr.fillStyle = '#ffffff'; xr.fillRect(0, 0, S, S); xb.fillStyle = '#202020'; xb.fillRect(0, 0, S, S);
+      xa.fillStyle = '#4a2e18'; xa.fillRect(0, 0, S, S); xr.fillStyle = '#ffffff'; xr.fillRect(0, 0, S, S); xb.fillStyle = '#303030'; xb.fillRect(0, 0, S, S);
       for (var c = 0; c < N; c++) {
-        var x0 = c * PW, off = Math.floor(Math.random() * S), hue = rnd(24, 34), sat = rnd(42, 58), lit = rnd(38, 52);
-        for (var rep = -1; rep <= 1; rep += 1) {
-          var y0 = off + rep * S;                                  // одна доска длиной в весь тайл, сдвинутая; стык — на y0
-          xa.save(); xa.beginPath(); xa.rect(x0 + 2, 0, PW - 4, S); xa.clip();
-          xr.save(); xr.beginPath(); xr.rect(x0 + 2, 0, PW - 4, S); xr.clip();
-          xb.save(); xb.beginPath(); xb.rect(x0 + 2, 0, PW - 4, S); xb.clip();
-          /* доска: заливка + продольный градиент освещения */
+        var x0 = c * PW, off = Math.floor(Math.random() * S), hue = rnd(26, 33), sat = rnd(38, 50), lit = rnd(40, 50);
+        var fib = [], k;
+        for (k = 0; k < 26; k++) fib.push({ gx: rnd(6, PW - 6), amp: rnd(1.5, 4), n: Math.floor(rnd(2, 6)), ph: rnd(0, 6.28), a: rnd(.025, .07), w: rnd(1.5, 4), dark: Math.random() < .65 });
+        var kx = Math.random() < .4 ? { x: rnd(34, PW - 34), y: rnd(80, S - 80) } : null;
+        for (var rep = -1; rep <= 1; rep++) {
+          var y0 = off + rep * S;
+          [xa, xr, xb].forEach(function (x) { x.save(); x.beginPath(); x.rect(x0 + 1, y0, PW - 2, S); x.clip(); });
           var g = xa.createLinearGradient(x0, 0, x0 + PW, 0);
-          g.addColorStop(0, 'hsl(' + hue + ',' + sat + '%,' + (lit + 3) + '%)'); g.addColorStop(.5, 'hsl(' + hue + ',' + sat + '%,' + lit + '%)'); g.addColorStop(1, 'hsl(' + hue + ',' + sat + '%,' + (lit - 3) + '%)');
+          g.addColorStop(0, 'hsl(' + hue + ',' + sat + '%,' + (lit + 2) + '%)'); g.addColorStop(.5, 'hsl(' + hue + ',' + sat + '%,' + lit + '%)'); g.addColorStop(1, 'hsl(' + hue + ',' + sat + '%,' + (lit - 2) + '%)');
           xa.fillStyle = g; xa.fillRect(x0, y0, PW, S);
-          xr.fillStyle = 'rgb(' + Math.floor(rnd(95, 150)) + ',' + Math.floor(rnd(95, 150)) + ',' + Math.floor(rnd(95, 150)) + ')'; xr.fillRect(x0, y0, PW, S);
-          xb.fillStyle = '#9a9a9a'; xb.fillRect(x0, y0, PW, S);
-          /* волокна */
-          for (var k = 0; k < 46; k++) {
-            var gx = x0 + rnd(4, PW - 4), amp = rnd(1, 4), fr = rnd(.004, .012), ph = rnd(0, 6), dark = Math.random() < .7;
-            xa.strokeStyle = dark ? 'rgba(52,28,10,' + rnd(.05, .17) + ')' : 'rgba(255,214,160,' + rnd(.04, .1) + ')'; xa.lineWidth = rnd(.6, 2);
-            xb.strokeStyle = dark ? 'rgba(60,60,60,' + rnd(.15, .35) + ')' : 'rgba(210,210,210,' + rnd(.1, .2) + ')'; xb.lineWidth = rnd(.6, 1.6);
-            xa.beginPath(); xb.beginPath();
-            for (var y = y0; y < y0 + S; y += 16) { var xx = gx + Math.sin(y * fr + ph) * amp; if (y == y0) { xa.moveTo(xx, y); xb.moveTo(xx, y); } else { xa.lineTo(xx, y); xb.lineTo(xx, y); } }
-            xa.stroke(); xb.stroke();
+          var tone = xa.createLinearGradient(0, y0, 0, y0 + S); tone.addColorStop(0, 'rgba(255,230,190,.05)'); tone.addColorStop(.5, 'rgba(0,0,0,.04)'); tone.addColorStop(1, 'rgba(255,230,190,.05)'); xa.fillStyle = tone; xa.fillRect(x0, y0, PW, S);
+          var rv = Math.floor(rnd(120, 150)); xr.fillStyle = 'rgb(' + rv + ',' + rv + ',' + rv + ')'; xr.fillRect(x0, y0, PW, S);
+          xb.fillStyle = '#8c8c8c'; xb.fillRect(x0, y0, PW, S);
+          /* мягкие продольные волокна: периодичны по высоте тайла (без шва) */
+          xa.lineCap = 'round';
+          fib.forEach(function (f) {
+            xa.strokeStyle = f.dark ? 'rgba(70,38,14,' + f.a + ')' : 'rgba(255,225,175,' + (f.a * .7) + ')'; xa.lineWidth = f.w;
+            xa.beginPath();
+            for (var y = y0 - 8; y <= y0 + S + 8; y += 8) { var xx = x0 + f.gx + Math.sin((y - y0) * TP * f.n / S + f.ph) * f.amp; if (y == y0 - 8) xa.moveTo(xx, y); else xa.lineTo(xx, y); }
+            xa.stroke();
+          });
+          if (kx) {
+            var ky = y0 + kx.y;
+            for (var rr = 12; rr > 2; rr -= 2) { xa.fillStyle = 'rgba(60,32,12,.06)'; xa.beginPath(); xa.ellipse(x0 + kx.x, ky, rr * .8, rr * 2, 0, 0, 7); xa.fill(); }
+            xb.fillStyle = 'rgba(60,60,60,.12)'; xb.beginPath(); xb.ellipse(x0 + kx.x, ky, 7, 16, 0, 0, 7); xb.fill();
           }
-          /* сучок */
-          if (Math.random() < .45) {
-            var kx = x0 + rnd(30, PW - 30), ky = y0 + rnd(60, S - 60);
-            for (var rr = 14; rr > 2; rr -= 3) { xa.fillStyle = 'rgba(50,26,8,' + (.07 + (14 - rr) * .018) + ')'; xa.beginPath(); xa.ellipse(kx, ky, rr * .75, rr * 1.9, 0, 0, 7); xa.fill(); xb.fillStyle = 'rgba(70,70,70,.2)'; xb.beginPath(); xb.ellipse(kx, ky, rr * .75, rr * 1.9, 0, 0, 7); xb.fill(); }
-          }
-          /* мелкая крапинка */
-          for (k = 0; k < 220; k++) { xa.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '255,230,190') + ',' + rnd(.02, .06) + ')'; xa.fillRect(x0 + rnd(0, PW), y0 + rnd(0, S), 2, 2); }
-          xa.restore(); xr.restore(); xb.restore();
-          /* стык досок: тёмная и грубая линия, рельеф вниз */
-          xa.fillStyle = '#24150a'; xa.fillRect(x0 + 2, y0 - 1, PW - 4, 3); xr.fillStyle = '#ffffff'; xr.fillRect(x0 + 2, y0 - 1, PW - 4, 3); xb.fillStyle = '#202020'; xb.fillRect(x0 + 2, y0 - 1, PW - 4, 3);
+          [xa, xr, xb].forEach(function (x) { x.restore(); });
+          /* стык: тонкая мягкая канавка, ниже блик от фаски */
+          var jg = xa.createLinearGradient(0, y0 - 3, 0, y0 + 3); jg.addColorStop(0, 'rgba(30,16,6,0)'); jg.addColorStop(.45, 'rgba(30,16,6,.55)'); jg.addColorStop(.6, 'rgba(255,230,190,.14)'); jg.addColorStop(1, 'rgba(255,230,190,0)');
+          xa.fillStyle = jg; xa.fillRect(x0 + 1, y0 - 3, PW - 2, 6);
+          var jb = xb.createLinearGradient(0, y0 - 3, 0, y0 + 3); jb.addColorStop(0, 'rgba(48,48,48,0)'); jb.addColorStop(.5, 'rgba(48,48,48,.9)'); jb.addColorStop(1, 'rgba(48,48,48,0)');
+          xb.fillStyle = jb; xb.fillRect(x0 + 1, y0 - 3, PW - 2, 6);
         }
       }
+      /* мягкая грань между рядами досок */
+      for (c = 1; c < N; c++) { var gl = xa.createLinearGradient(c * PW - 3, 0, c * PW + 3, 0); gl.addColorStop(0, 'rgba(30,16,6,0)'); gl.addColorStop(.5, 'rgba(30,16,6,.5)'); gl.addColorStop(1, 'rgba(30,16,6,0)'); xa.fillStyle = gl; xa.fillRect(c * PW - 3, 0, 6, S); xb.fillStyle = 'rgba(48,48,48,.5)'; xb.fillRect(c * PW - 1, 0, 2, S); }
       function T(c, enc) { var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 16; if (enc) t.encoding = THREE.sRGBEncoding; return t; }
       return { map: T(cA, true), rough: T(cR), bump: T(cB) };
     }
@@ -81,7 +84,7 @@
     }
     function applyFloor() {
       if (!floor || !floorMat) return; var mt = floor.material;
-      if (ON) { mt.map = floorMat.map; mt.roughnessMap = floorMat.rmap; mt.bumpMap = floorMat.bump; mt.bumpScale = 1.2; mt.roughness = .8; mt.metalness = .06; mt.color.setHex(0xffffff); }
+      if (ON) { mt.map = floorMat.map; mt.roughnessMap = floorMat.rmap; mt.bumpMap = floorMat.bump; mt.bumpScale = .35; mt.roughness = .62; mt.metalness = .06; mt.color.setHex(0xffffff); }
       else { mt.map = oldFloor.map; mt.roughnessMap = oldFloor.rmap || null; mt.bumpMap = oldFloor.bump || null; mt.bumpScale = oldFloor.bs; mt.roughness = oldFloor.rough; mt.metalness = oldFloor.metal; }
       mt.needsUpdate = true;
     }
@@ -106,8 +109,8 @@
     [[-6, 6.75, 4.4, 2.0], [6, 6.7, 4.6, 2.1], [6.3, -3, 1.8, 1.8], [9.2, 4.2, 1.7, 1.7], [-9.1, 6.8, 1.5, 1.5], [9.2, 6.8, 1.5, 1.5], [9.2, -6.6, 1.5, 1.5], [0, 2, 6.4, 2.3], [0, -5, 7.2, 3.5], [-7.2, -7.35, 2.0, 1.8], [-1.3, 1.9, 1.6, 1.2]].forEach(function (a) { blob(a[0], a[1], a[2], a[3]); });
 
     /* ---------- 3. лучи солнца из окон ---------- */
-    var bc = cvs(64, 8), bxx = bc.getContext('2d');
-    for (var i = 0; i < 64; i++) { var a = Math.pow(1 - i / 63, 1.4) * Math.min(1, i / 4); bxx.fillStyle = 'rgba(255,236,190,' + a.toFixed(3) + ')'; bxx.fillRect(i, 0, 1, 8); }
+    var bc = cvs(64, 64), bxx = bc.getContext('2d');
+    for (var i = 0; i < 64; i++) for (var j = 0; j < 64; j++) { var a = Math.pow(1 - i / 63, 1.4) * Math.min(1, i / 8) * Math.pow(Math.sin(Math.PI * (j + .5) / 64), 1.2); bxx.fillStyle = 'rgba(255,236,190,' + a.toFixed(3) + ')'; bxx.fillRect(i, j, 1, 1); }
     var beamTex = new THREE.CanvasTexture(bc);
     var beamMat = new THREE.MeshBasicMaterial({ map: beamTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     var beams = [];
@@ -123,7 +126,7 @@
       var sd = W3.sunDir, env = W3.ENV, wx = W3.WX;
       var up = ON && sd && env && sd.y > .14 && sd.z > .12 && env.dayF > .3;
       var amt = up ? Math.min(1, (sd.y - .14) * 4) * Math.min(1, (sd.z - .12) * 4) * env.dayF * (1 - (wx ? wx.cloud : 0) * .9) : 0;
-      beamMat.opacity = .2 * amt;
+      beamMat.opacity = .16 * amt;
       beams.forEach(function (b) {
         b.m.visible = amt > .02; if (!(amt > .02)) return;
         var yt = 5.8, yb = 1.5, tt = yt / sd.y, tb = yb / sd.y, p = b.p;
