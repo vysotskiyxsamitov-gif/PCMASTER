@@ -117,7 +117,7 @@ function pauseDraw() {
     ) +
 
     '<div class="mu" style="text-align:center">' +
-    'F8 — реализм · Esc — продолжить · сборка 05.11-A</div>' +
+    'F8 — реализм · Esc — продолжить · сборка 05.11-B</div>' +
 
     '</div>';
 }
