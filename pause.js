@@ -87,6 +87,11 @@ function pauseDraw() {
     ) +
 
     pzBtn(
+      'Красота (паркет, тени, лучи): ' + (window.__look && window.__look.get() ? 'вкл' : 'выкл'),
+      'window.__look&&window.__look.toggle();pauseDraw()'
+    ) +
+
+    pzBtn(
       'Графика: ' + (opt.q ? 'высокая' : 'экономная'),
       'opt.q=!opt.q;rs();pauseDraw()'
     ) +
@@ -112,7 +117,7 @@ function pauseDraw() {
     ) +
 
     '<div class="mu" style="text-align:center">' +
-    'F8 — реализм · Esc — продолжить · сборка 04.11-E</div>' +
+    'F8 — реализм · Esc — продолжить · сборка 05.11-A</div>' +
 
     '</div>';
 }

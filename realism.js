@@ -15,7 +15,7 @@
   function safe(f) { try { return f(); } catch (e) { console.error('[realism]', e); } }
 
   function go() {
-    var LV = 2, NAMES = ['выкл', 'средний', 'высокий'];
+    var LV = (/Electron/i.test(navigator.userAgent) ? 1 : 0), NAMES = ['выкл', 'средний', 'высокий'];
     try { var sv = localStorage.getItem('pcrz'); if (sv !== null && sv !== '') LV = Math.max(0, Math.min(2, parseInt(sv, 10) || 0)); } catch (e) { }
     var seenMat = new WeakSet(), seenMesh = new WeakSet(), sun = null;
 
@@ -63,7 +63,8 @@
               big = r > 5;
             }
             o.__rz.std = 1;
-            o.__rz.cast = !isFloorLike(o) && !small && (t != 'PlaneGeometry' || big || o.__rz.c);
+            var inSt = false, pp = o.parent; while (pp) { if (pp === window.__W.ST) { inSt = true; break; } pp = pp.parent; }
+            o.__rz.cast = !inSt && !isFloorLike(o) && !small && (t != 'PlaneGeometry' || big || o.__rz.c);
             o.__rz.recv = true;
           }
         }
@@ -137,10 +138,20 @@
       var dt = (now - last) / 1000; last = now;
       if (!(dt > 0) || dt > .25 || mode == 'menu') { acc = 0; n = 0; return; }
       acc += dt; n++;
-      if (n >= 180) { if (n / acc < 36 && LV > 0) { set(LV - 1); try { toast('Реализм снижен до «' + NAMES[LV] + '» — низкий FPS'); } catch (e) { } } acc = 0; n = 0; }
+      if (n >= 90) { if (n / acc < 42 && LV > 0) { set(LV - 1); try { toast('Реализм снижен до «' + NAMES[LV] + '» — низкий FPS'); } catch (e) { } } acc = 0; n = 0; }
     })(last);
 
-    setTimeout(sweep, 600); setInterval(sweep, 3000);
+    /* тени обновляем через кадр (в 2 раза дешевле; движение персонажей это почти не портит) */
+    var _rend = R.render.bind(R), fr = 0;
+    R.render = function (s, c) {
+      if (s === scene && c === cam) {
+        if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ & 1) === 0); }
+        else if (!R.shadowMap.autoUpdate) R.shadowMap.autoUpdate = true;
+      }
+      return _rend(s, c);
+    };
+
+    setTimeout(sweep, 600); setInterval(sweep, 6000);
     console.log('[realism] готово, уровень', NAMES[LV]);
   }
 

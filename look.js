@@ -88,7 +88,7 @@
 
     /* ---------- 2. контактные тени ---------- */
     var gc = cvs(4, 64), gx = gc.getContext('2d'), gg = gx.createLinearGradient(0, 0, 0, 64);   // v=1 (верх текстуры) — у стены
-    gg.addColorStop(0, 'rgba(0,0,0,0)'); gg.addColorStop(.35, 'rgba(0,0,0,.14)'); gg.addColorStop(1, 'rgba(0,0,0,.55)'); gx.fillStyle = gg; gx.fillRect(0, 0, 4, 64);
+    gg.addColorStop(0, 'rgba(0,0,0,.55)'); gg.addColorStop(.65, 'rgba(0,0,0,.14)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); gx.fillStyle = gg; gx.fillRect(0, 0, 4, 64);
     var wallTex = new THREE.CanvasTexture(gc);
     var sc = cvs(128, 128), sx = sc.getContext('2d'); sx.filter = 'blur(13px)'; sx.fillStyle = 'rgba(0,0,0,.75)'; sx.fillRect(30, 30, 68, 68);
     var softTex = new THREE.CanvasTexture(sc);
@@ -96,9 +96,9 @@
     var wm = decalMat(wallTex), sm = decalMat(softTex);
     [[0, 0, -8, 20], [-PI / 2, 10, 0, 16], [PI / 2, -10, 0, 16], [PI, 0, 8, 20]].forEach(function (a) {   // [угол, x, z, длина]
       var g = new THREE.Group(); g.rotation.y = a[0]; g.position.set(a[1], 0, a[2]);
-      var m = new THREE.Mesh(new THREE.PlaneGeometry(a[3], 1.05), wm); m.rotation.x = -PI / 2; m.position.set(0, .016, a[0] === 0 || a[0] === PI ? (a[0] === 0 ? .525 : -.525) * 1 : 0);
-      /* внутрь комнаты от стены: локальная ось z группы после поворота смотрит в комнату */
-      m.position.set(0, .016, .525); g.add(m); deco.add(g);
+      var m = new THREE.Mesh(new THREE.PlaneGeometry(a[3], 1.05), wm); m.rotation.x = -PI / 2;
+      m.position.set(0, .016, .525);   /* локальная ось z группы после поворота смотрит внутрь комнаты */
+      g.add(m); deco.add(g);
     });
     function blob(x, z, w, d, op) {
       var m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), sm); m.rotation.x = -PI / 2; m.position.set(x, .018, z); m.material = m.material; deco.add(m); m.userData.op = op; return m;

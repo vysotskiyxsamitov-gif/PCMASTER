@@ -39,6 +39,7 @@
       "orders.js",
       "realism.js",
       "detail.js",
+      "look.js",
       "three.min.js"
     ],
     "win": {
