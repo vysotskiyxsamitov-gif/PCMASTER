@@ -19,8 +19,8 @@
   function go() {
     var PI = Math.PI;
     /* ---------- позиции ---------- */
-    var DZ = -2.6, DW = 1.5, DH = 3.3;                       // дверь в правой стене (x=10)
-    var X0 = 10.03, X1 = 16.6, Z0 = -5.9, Z1 = .7, RH = 5.4;   // склад
+    var DZ = 1.9, DW = 1.5, DH = 3.3;                       // дверь в правой стене (x=10)
+    var X0 = 10.03, X1 = 16.6, Z0 = DZ - 3.3, Z1 = DZ + 3.3, RH = 5.4, ZD = DZ + 2.6;   // склад
     var TOTAL = 0;
 
     /* ---------- состояние (сохраняется в G.ev.sk) ---------- */
@@ -101,7 +101,7 @@
 
     /* ---------- пролом: кирпич вокруг двери ---------- */
     var patch = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 4.8), new THREE.MeshStandardMaterial({ map: brickTex(), transparent: true, roughness: .95, alphaTest: .05 }));
-    patch.rotation.y = -PI / 2; patch.position.set(9.95, 2.4, -2.6); patch.receiveShadow = true; patch.userData.keep = 1; cg.add(patch);
+    patch.rotation.y = -PI / 2; patch.position.set(9.95, 2.4, DZ); patch.receiveShadow = true; patch.userData.keep = 1; cg.add(patch);
     var steel = M(0x2a2f3a, .5, .6), frameM = M(0x4b4d52, .8, .2);
     box(cg, .34, .4, DW + .5, frameM, 9.88, DH + .15, DZ); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ - DW / 2 - .1); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ + DW / 2 + .1);
     var door = new THREE.Group(); door.position.set(9.96, 0, DZ - DW / 2); cg.add(door);
@@ -142,13 +142,13 @@
     var shell = new THREE.Mesh(new THREE.BoxGeometry(X1 - X0, RH, Z1 - Z0), shellMats); shell.position.set((X0 + X1) / 2, RH / 2, (Z0 + Z1) / 2); shell.receiveShadow = true; shell.castShadow = true; rm.add(shell);
     /* потолочные балки, трубы */
     var wood = M(0x2c2218, .9);
-    [-4.5, -2.6, -.7].forEach(function (z) { box(rm, X1 - X0, .35, .3, wood, (X0 + X1) / 2, RH - .18, z); });
+    [-1.9, 0, 1.9].forEach(function (z) { box(rm, X1 - X0, .35, .3, wood, (X0 + X1) / 2, RH - .18, DZ + z); });
     [[.6, 4.9], [-.4, 5.05]].forEach(function (a, i) { var p = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, Z1 - Z0 - .3, 12), M(0x5a4a3a, .5, .6)); p.rotation.x = PI / 2; p.position.set(X1 - .6 - i * .5, a[1], (Z0 + Z1) / 2); p.castShadow = true; rm.add(p); });
     /* лампа */
     var bulb = new THREE.Mesh(new THREE.SphereGeometry(.12, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffd9a0 })); bulb.position.set(13.3, RH - .9, DZ); rm.add(bulb);
     var cord = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .7, 6), M(0x111111, .5)); cord.position.set(13.3, RH - .5, DZ); rm.add(cord);
     var shade = new THREE.Mesh(new THREE.ConeGeometry(.22, .18, 14, 1, true), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: .5, metalness: .6, side: THREE.DoubleSide })); shade.position.set(13.3, RH - .78, DZ); rm.add(shade);
-    var lamp = new THREE.PointLight(0xffc27a, 0, 11, 1.4); lamp.position.set(13.3, RH - 1.1, DZ); scene.add(lamp);     // создаём сразу (без перекомпиляции шейдеров при показе)
+    var lamp = new THREE.PointLight(0xffc27a, 0, 15, 1.1); lamp.position.set(13.3, RH - 1.1, DZ); scene.add(lamp);     // создаём сразу (без перекомпиляции шейдеров при показе)
     /* луч света из узкого окна под потолком */
     var slit = new THREE.Mesh(new THREE.PlaneGeometry(.4, 1.0), new THREE.MeshBasicMaterial({ color: 0xcfe4ff })); slit.position.set(X1 - .02, RH - 1.2, Z0 + 1.6); slit.rotation.y = -PI / 2; rm.add(slit);
     var beamC = cvs(32, 128), bx = beamC.getContext('2d'), bg = bx.createLinearGradient(0, 0, 0, 128); bg.addColorStop(0, 'rgba(210,230,255,.55)'); bg.addColorStop(1, 'rgba(210,230,255,0)'); bx.fillStyle = bg; bx.fillRect(0, 0, 32, 128);
@@ -167,13 +167,13 @@
     }
     shelfUnit(X1 - .55, Z0 + 1.7, PI / 2, 2.3); shelfUnit(X1 - .55, DZ + 1.4, PI / 2, 2.3); shelfUnit(13.4, Z0 + .55, 0, 2.6); shelfUnit(11.7, Z0 + .55, 0, 1.8);
     function crt(x, y, z, ry) { var g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; rm.add(g); box(g, .55, .5, .5, M(0xcfc6ae, .7), 0, .25, 0); box(g, .4, .35, .06, M(0x101418, .15, .3), 0, .27, .26); box(g, .3, .25, .3, M(0xcfc6ae, .7), 0, .6, -.1); return g; }
-    crt(15.4, 0, -1.2, .6); crt(11.4, 0, -.2, -.4).position.y = 0; crt(15.2, .0, -4.6, 2.2);
+    crt(15.4, 0, -1.2 + ZD, .6); crt(11.4, 0, -.2 + ZD, -.4); crt(15.2, 0, -4.6 + ZD, 2.2);
     var tarp = mesh(rm, new THREE.BoxGeometry(1.4, .7, 1.0), M(0x59634f, 1), 12.1, .35, DZ + 2.4); tarp.rotation.y = .3; mesh(rm, new THREE.SphereGeometry(.7, 12, 8), M(0x59634f, 1), 12.1, .55, DZ + 2.4, 1, .55, .8);
-    [[11.0, -5.0], [11.65, -5.2]].forEach(function (p) { mesh(rm, new THREE.CylinderGeometry(.3, .3, .9, 14), M(0x2d4f6e, .5, .5), p[0], .45, p[1]); });
-    var puddle = new THREE.Mesh(new THREE.CircleGeometry(.9, 18), new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: .05, metalness: .2, transparent: true, opacity: .75 })); puddle.rotation.x = -PI / 2; puddle.position.set(14.8, .02, -3.0); puddle.scale.set(1, 1.5, 1); rm.add(puddle);
+    [[11.0, -5.0 + ZD], [11.65, -5.2 + ZD]].forEach(function (p) { mesh(rm, new THREE.CylinderGeometry(.3, .3, .9, 14), M(0x2d4f6e, .5, .5), p[0], .45, p[1]); });
+    var puddle = new THREE.Mesh(new THREE.CircleGeometry(.9, 18), new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: .05, metalness: .2, transparent: true, opacity: .75 })); puddle.rotation.x = -PI / 2; puddle.position.set(14.8, .02, -3.0 + ZD); puddle.scale.set(1, 1.5, 1); rm.add(puddle);
     var cal = lp(rm, '2004', .45, .6, X1 - .03, 3.0, DZ + .2, '#7f1d1d', '#e7e2d8', -PI / 2);
-    var table = new THREE.Group(); table.position.set(12.3, 0, -.9); rm.add(table); box(table, 1.6, .08, .8, dkw, 0, .75, 0); [[-.7, -.3], [.7, -.3], [-.7, .3], [.7, .3]].forEach(function (a) { box(table, .08, .75, .08, dkw, a[0], .37, a[1]); });
-    var chairBroken = new THREE.Group(); chairBroken.position.set(11.7, 0, -3.3); chairBroken.rotation.z = 1.4; chairBroken.rotation.y = .6; rm.add(chairBroken); box(chairBroken, .5, .06, .5, dkw, 0, .5, 0); box(chairBroken, .5, .55, .05, dkw, 0, .85, -.22); [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2]].forEach(function (a) { box(chairBroken, .05, .5, .05, dkw, a[0], .25, a[1]); });
+    var table = new THREE.Group(); table.position.set(12.3, 0, -.9 + ZD); rm.add(table); box(table, 1.6, .08, .8, dkw, 0, .75, 0); [[-.7, -.3], [.7, -.3], [-.7, .3], [.7, .3]].forEach(function (a) { box(table, .08, .75, .08, dkw, a[0], .37, a[1]); });
+    var chairBroken = new THREE.Group(); chairBroken.position.set(11.7, 0, -3.3 + ZD); chairBroken.rotation.z = 1.4; chairBroken.rotation.y = .6; rm.add(chairBroken); box(chairBroken, .5, .06, .5, dkw, 0, .5, 0); box(chairBroken, .5, .55, .05, dkw, 0, .85, -.22); [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2]].forEach(function (a) { box(chairBroken, .05, .5, .05, dkw, a[0], .25, a[1]); });
 
     /* ---------- грязь: плёнка на полу ---------- */
     var grime = new THREE.Mesh(new THREE.PlaneGeometry(X1 - X0 - .1, Z1 - Z0 - .1), new THREE.MeshBasicMaterial({ map: blotTex('rgba(20,14,6,'), color: 0x000000, transparent: true, opacity: .5, depthWrite: false }));
@@ -234,7 +234,7 @@
       crateHit.userData.act = st == 5 ? openCrate : null;
     }
     /* ---------- награда ---------- */
-    var crate = new THREE.Group(); crate.position.set(X1 - 1.0, 0, -1.2); crate.rotation.y = -PI / 2; crate.visible = false; rm.add(crate);
+    var crate = new THREE.Group(); crate.position.set(X1 - 1.0, 0, DZ + 1.4); crate.rotation.y = -PI / 2; crate.visible = false; rm.add(crate);
     var crateM = M(0x7a5a34, .85); box(crate, 1.1, .6, .75, crateM, 0, .3, 0); box(crate, 1.14, .05, .79, M(0x5a4224, .9), 0, .62, 0); [-.4, .4].forEach(function (x) { box(crate, .06, .62, .8, M(0x4a3520, .9), x, .31, 0); });
     var cLid = new THREE.Group(); cLid.position.set(0, .62, -.37); crate.add(cLid); box(cLid, 1.14, .05, .76, M(0x6a4d2c, .9), 0, 0, .38);
     var glowC = cvs(64, 64), gx2 = glowC.getContext('2d'), gg2 = gx2.createRadialGradient(32, 32, 0, 32, 32, 32); gg2.addColorStop(0, 'rgba(255,220,120,.9)'); gg2.addColorStop(1, 'rgba(255,220,120,0)'); gx2.fillStyle = gg2; gx2.fillRect(0, 0, 64, 64);
@@ -466,10 +466,10 @@
         motes.geometry.setDrawRange(0, vis);
         for (var m = 0; m < vis; m++) { var ix = m * 3; p.array[ix] += Math.sin(now * .0004 + m) * dt * .08; p.array[ix + 1] += Math.cos(now * .0003 + m * 1.7) * dt * .06 - dt * .01; p.array[ix + 2] += Math.sin(now * .0005 + m * 2.3) * dt * .08; if (p.array[ix + 1] < .3) p.array[ix + 1] = RH - .8; }
         p.needsUpdate = true;
-        fl -= dt; var base = st >= 5 ? 1.5 : 1.0 + (1 - dirt) * .35, f = 1;
+        fl -= dt; var base = st >= 5 ? 2.6 : 1.9 + (1 - dirt) * .5, f = 1;
         if (st < 5) { if (fl <= 0 && Math.random() < .012) fl = .12 + Math.random() * .25; f = fl > 0 ? .25 + Math.random() * .4 : 1 + Math.sin(now * .013) * .03; }
         lamp.intensity = base * f; lamp.color.setHex(st >= 5 ? 0xfff0d8 : 0xffc27a); bulb.material.color.setHex(f < .7 ? 0x6a5a40 : 0xffe2b0);
-        grime.material.opacity = .15 + dirt * .55; beamM.opacity = .4 * (.5 + dirt * .5);
+        grime.material.opacity = .08 + dirt * .3; beamM.opacity = .4 * (.5 + dirt * .5);
         if (st == 5) cGlow.material.opacity = .5 + Math.sin(now * .004) * .25;
       }
     })(last);

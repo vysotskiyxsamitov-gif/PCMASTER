@@ -28,6 +28,7 @@
     var _talk = talk;
     talk = function (lines, cb, opts) {
       if (opts && opts.length && opts.length <= 2) opts = opts.map(function (o, i) { return [(/^\[[EQ]\]/.test(o[0]) ? '' : (i ? '[Q] ' : '[E] ')) + o[0], o[1]]; });
+      else if (opts && opts.length > 2) opts = opts.map(function (o, i) { return [(/^\[\d\]/.test(o[0]) ? '' : '[' + (i + 1) + '] ') + o[0], o[1]]; });
       return _talk.call(this, lines, cb, opts);
     };
     addEventListener('keydown', function (e) {
@@ -35,6 +36,10 @@
       if (TK.i != TK.l.length - 1) return;
       if (e.code == 'KeyE' && TK.o[0]) { e.preventDefault(); tpick(0); }
       else if (e.code == 'KeyQ' && TK.o[1]) { e.preventDefault(); tpick(1); }
+    });
+    addEventListener('keydown', function (e) {
+      if (e.repeat || mode != 'talk' || !TK || !TK.o || TK.o.length < 3 || TK.i != TK.l.length - 1) return;
+      var m = /^(Digit|Numpad)([1-9])$/.exec(e.code); if (m && TK.o[+m[2] - 1]) { e.preventDefault(); tpick(+m[2] - 1); }
     });
 
     /* ---------- клиенты: тип заказа ---------- */

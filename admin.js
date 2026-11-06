@@ -38,7 +38,7 @@
     if (w == 'open') { s.st = 4; s.key = 0; S.sync(); refresh(); return say('Дверь открыта — убирайся на складе.'); }
     if (w == 'clean') { s.st = 5; s.cl = []; for (var i = 0; i < S.total; i++) s.cl.push(i); S.sync(); refresh(); return say('Склад чист. Ящик с наградой у дальней стены.'); }
     if (w == 'reward') { s.st = 5; S.sync(); say('Открой ящик на складе (E).'); return; }
-    if (w == 'go') { if (s.st >= 4) P.set(13, 3.4, -2.6); else P.set(8.2, 3.4, -2.6); yaw = s.st >= 4 ? 1.5 : 1.57; return say('Телепорт.'); }
+    if (w == 'go') { if (s.st >= 4) P.set(13, 3.4, 1.9); else P.set(8.0, 3.4, 1.9); yaw = -1.57; return say('Телепорт.'); }
     say('Неизвестно: storage ' + w, '#f88');
   }];
   C.blackout = ['blackout', function () { if (!window.__blackout) return say('blackout.js не загружен', '#f88'); window.__blackout.start(); say('Свет выбило.'); }];
@@ -51,7 +51,7 @@
   C.rob = ['rob', function () { try { spawnRob(); say('Ограбление!'); } catch (e) { say(e.message, '#f88'); } }];
   C.book = ['book', function () { close(); setTimeout(function () { window.__bookview && window.__bookview.open(); }, 80); }];
   C.tp = ['tp store|door|bench|counter|out', function (a) {
-    var T = { store: [13, 3.4, -2.6, 1.5], door: [8.2, 3.4, -2.6, 1.57], bench: [0, 3.4, -2.6, 0], counter: [0, 3.4, 4.2, 0], out: [0, 3.4, 10.5, 0], start: [0, 3.4, .85, 0] }, t = T[a[0]];
+    var T = { store: [13, 3.4, 1.9, -1.57], door: [8.0, 3.4, 1.9, -1.57], bench: [0, 3.4, -2.6, 0], counter: [0, 3.4, 4.2, 0], out: [0, 3.4, 10.5, 0], start: [0, 3.4, .85, 0] }, t = T[a[0]];
     if (!t) return say('Места: store door bench counter out start', '#f88'); P.set(t[0], t[1], t[2]); yaw = t[3]; say('Телепорт: ' + a[0]);
   }];
   C.mood = ['mood', function () { window.__mood ? window.__mood.toggle() : say('mood.js не загружен', '#f88'); }];

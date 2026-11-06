@@ -6,7 +6,7 @@ var PZ = 0;
 var pzWas = false;
 
 var pzTab = 'g';
-var PZ_BUILD = 'сборка 05.11-D';
+var PZ_BUILD = 'сборка 05.11-E';
 
 function pzCss() {
   if (document.getElementById('pzcss')) return;
