@@ -44,6 +44,7 @@
       "mood.js",
       "bookview.js",
       "storage.js",
+      "style.js",
       "menu2.js",
       "admin.js",
       "three.min.js"
