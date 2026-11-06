@@ -47,7 +47,9 @@
       "style.js",
       "menu2.js",
       "admin.js",
-      "three.min.js"
+      "three.min.js",
+      "rays.js",
+      "loadscreen.js"
     ],
     "win": {
       "target": "nsis"

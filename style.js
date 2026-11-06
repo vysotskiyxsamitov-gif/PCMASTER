@@ -11,7 +11,7 @@
 
   function go() {
     var ON = true; try { var sv = localStorage.getItem('pcstyle'); if (sv === '0') ON = false; } catch (e) { }
-    var TU = { value: ON ? 1 : 0 }, queue = [], seen = new WeakSet(), outlines = 0, MAXO = 260;
+    var TU = { value: ON ? 1 : 0 }, queue = [], seen = new WeakSet(), outlines = 0, MAXO = 150;
     var CODE = [
       '{',
       ' float l = dot(gl_FragColor.rgb, vec3(0.299,0.587,0.114));',
