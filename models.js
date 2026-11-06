@@ -262,7 +262,17 @@
       [[-1.6, .15], [-.4, -.2], [1.0, .1]].forEach(function (a, k) { B(g, .9, .5, .7, M([0x2563eb, 0xb91c1c, 0x15803d][k], .7), a[0], .73, a[1]); B(g, .7, .06, .5, M(0xe5e7eb, .6), a[0], .99, a[1]); });  // ящики на полке
       /* тумба с ящиками */
       B(g, 1.55, .9, 2.3, M(0x1f2430, .5, .4), 2.1, 1.0, 0);
-      [0, 1, 2].forEach(function (i) { B(g, 1.45, .25, .04, M(0x2b3140, .5, .4), 2.1, .72 + i * .27, 1.17); B(g, .5, .05, .05, M(0xcbd5e1, .3, .9), 2.1, .72 + i * .27, 1.21); });
+      var drw = [];
+      [0, 1, 2].forEach(function (i) {
+        var d = new THREE.Group(); d.position.set(2.1, .72 + i * .27, 1.17); g.add(d);
+        B(d, 1.45, .25, .04, M(0x2b3140, .5, .4), 0, 0, 0); B(d, .5, .05, .05, M(0xcbd5e1, .3, .9), 0, 0, .04);
+        var tm = M(0x3a3f4c, .7);                                                       // лоток ящика (виден, когда ящик выдвинут)
+        B(d, 1.35, .02, .7, tm, 0, -.1, -.36); B(d, .02, .14, .7, tm, -.67, -.03, -.36); B(d, .02, .14, .7, tm, .67, -.03, -.36); B(d, 1.35, .14, .02, tm, 0, -.03, -.7);
+        for (var k = 0; k < 5; k++) { var sc = C(d, .012, .012, .05, M(0xb0b6c0, .3, .8), -.5 + Math.random() * 1.0, -.08, -.2 - Math.random() * .4); sc.rotation.z = Math.random() * 3; }
+        var pn = C(d, .012, .012, .22, M(0xeab308, .6), -.3, -.075, -.45); pn.rotation.z = PI / 2; pn.rotation.y = .6;
+        d.userData.z0 = 1.17; drw.push(d);
+      });
+      window.__models.drawers = drw;
       /* тиски */
       B(g, .5, .22, .4, steel, -2.5, 1.7, 1.0); B(g, .5, .35, .08, steel, -2.5, 1.85, 1.24); var ha = C(g, .03, .03, .55, M(0xb0b6c0, .3, .9), -2.5, 1.82, .78); ha.rotation.x = PI / 2;
     });
@@ -272,6 +282,7 @@
     function realBook(bk) {
       bk.children.forEach(function (c) { if (c.material && !(c.material.transparent && c.material.opacity === 0)) c.visible = false; });
       var F = (window.__orders && window.__orders.faults) || [];
+      var origAct = bk.userData.act; bk.userData.act = function () { if (window.__bookview) window.__bookview.open(); else if (origAct) origAct(); };
       function page(items, title, num, left) {
         var c = document.createElement('canvas'); c.width = 640; c.height = 880; var x = c.getContext('2d');
         var gr = x.createLinearGradient(0, 0, 640, 0);

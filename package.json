@@ -41,6 +41,11 @@
       "detail.js",
       "look.js",
       "models.js",
+      "mood.js",
+      "bookview.js",
+      "storage.js",
+      "menu2.js",
+      "admin.js",
       "three.min.js"
     ],
     "win": {
