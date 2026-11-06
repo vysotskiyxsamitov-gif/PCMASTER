@@ -128,17 +128,18 @@
 
     /* ---------- переключатель и авто-снижение ---------- */
     function draw() { try { localStorage.setItem('pcrz', String(LV)); } catch (e) { } try { if (typeof pauseDraw == 'function' && document.getElementById('pz')) pauseDraw(); } catch (e) { } }
-    function set(v) { LV = v; sweep(); draw(); }
-    window.__rz = { get: function () { return LV; }, name: function () { return NAMES[LV]; }, set: set, cycle: function () { set((LV + 1) % 3); try { toast('Реализм: ' + NAMES[LV]); } catch (e) { } } };
+    var userSet = false, grace = 0;
+    function set(v, byUser) { LV = v; if (byUser) { userSet = true; } grace = performance.now() + 20000; sweep(); draw(); }
+    window.__rz = { get: function () { return LV; }, name: function () { return NAMES[LV]; }, set: function (v) { set(v, true); }, cycle: function () { set((LV + 1) % 3, true); try { toast('Реализм: ' + NAMES[LV]); } catch (e) { } } };
     addEventListener('keydown', function (e) { if (e.code == 'F8' && !e.repeat) { e.preventDefault(); window.__rz.cycle(); } });
 
     var last = performance.now(), acc = 0, n = 0;
     (function loop(now) {
       requestAnimationFrame(loop);
       var dt = (now - last) / 1000; last = now;
-      if (!(dt > 0) || dt > .25 || mode == 'menu') { acc = 0; n = 0; return; }
+      if (!(dt > 0) || dt > .25 || mode == 'menu' || userSet || now < grace) { acc = 0; n = 0; return; }
       acc += dt; n++;
-      if (n >= 90) { if (n / acc < 42 && LV > 0) { set(LV - 1); try { toast('Реализм снижен до «' + NAMES[LV] + '» — низкий FPS'); } catch (e) { } } acc = 0; n = 0; }
+      if (n >= 240) { if (n / acc < 28 && LV > 0) { set(LV - 1, false); try { toast('Реализм снижен до «' + NAMES[LV] + '» — низкий FPS'); } catch (e) { } } acc = 0; n = 0; }
     })(last);
 
     /* тени обновляем через кадр (в 2 раза дешевле; движение персонажей это почти не портит) */

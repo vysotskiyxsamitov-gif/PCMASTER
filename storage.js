@@ -59,29 +59,29 @@
       return T(c, 0, 0);
     }
     function doorTex() {
-      var c = cvs(256, 512), x = c.getContext('2d'); x.fillStyle = '#3d5a48'; x.fillRect(0, 0, 256, 512);
+      var c = cvs(256, 512), x = c.getContext('2d'); x.fillStyle = '#4f8062'; x.fillRect(0, 0, 256, 512);
       for (var i = 0; i < 60; i++) { x.fillStyle = 'rgba(' + (rr() < .5 ? '40,25,10' : '120,80,40') + ',' + (rr() * .2) + ')'; x.fillRect(rr() * 256, rr() * 512, 4 + rr() * 30, 1 + rr() * 6); }
       x.strokeStyle = 'rgba(30,45,38,.9)'; x.lineWidth = 6; x.strokeRect(14, 14, 228, 484); x.strokeRect(34, 34, 188, 200); x.strokeRect(34, 262, 188, 216);
       x.fillStyle = 'rgba(25,35,30,.8)'; for (var k = 0; k < 8; k++) { x.beginPath(); x.arc(24 + (k % 2) * 208, 30 + Math.floor(k / 2) * 150, 5, 0, 7); x.fill(); }
-      x.fillStyle = 'rgba(230,200,60,.85)'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.fillText('СКЛАД', 128, 150);
+      x.fillStyle = 'rgba(250,220,70,1)'; x.font = 'bold 44px sans-serif'; x.textAlign = 'center'; x.fillText('СКЛАД', 128, 150);
       x.fillStyle = 'rgba(200,60,40,.85)'; x.font = 'bold 22px sans-serif'; x.fillText('ВХОД ЗАПРЕЩЁН', 128, 190);
       for (i = 0; i < 40; i++) { x.fillStyle = 'rgba(120,60,20,' + (rr() * .25) + ')'; x.fillRect(rr() * 256, 300 + rr() * 212, 2 + rr() * 6, 14 + rr() * 90); }
       noiseOn(x, 256, 512, 1200, .15); return T(c, 0, 0);
     }
     function floorTex() {
-      var c = cvs(512, 512), x = c.getContext('2d'); x.fillStyle = '#4c4a46'; x.fillRect(0, 0, 512, 512); noiseOn(x, 512, 512, 6000, .12);
+      var c = cvs(512, 512), x = c.getContext('2d'); x.fillStyle = '#76716a'; x.fillRect(0, 0, 512, 512); noiseOn(x, 512, 512, 6000, .12);
       x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 2; for (var i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, 512); x.stroke(); x.beginPath(); x.moveTo(0, i * 128); x.lineTo(512, i * 128); x.stroke(); }
       for (i = 0; i < 12; i++) { x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1; x.beginPath(); var sx = rr() * 512, sy = rr() * 512; x.moveTo(sx, sy); for (var k = 0; k < 6; k++) { sx += (rr() - .5) * 40; sy += (rr() - .5) * 40; x.lineTo(sx, sy); } x.stroke(); }
       return T(c, 3, 3);
     }
     function wallTexS() {
-      var c = cvs(512, 512), x = c.getContext('2d'); x.fillStyle = '#6b6354'; x.fillRect(0, 0, 512, 512); noiseOn(x, 512, 512, 5000, .1);
+      var c = cvs(512, 512), x = c.getContext('2d'); x.fillStyle = '#9a8e76'; x.fillRect(0, 0, 512, 512); noiseOn(x, 512, 512, 5000, .1);
       for (var i = 0; i < 18; i++) { var gx = rr() * 512, gg = x.createLinearGradient(gx, 0, gx, 512); gg.addColorStop(0, 'rgba(30,22,10,' + (.12 + rr() * .2) + ')'); gg.addColorStop(1, 'rgba(30,22,10,0)'); x.fillStyle = gg; x.fillRect(gx, 0, 6 + rr() * 26, 100 + rr() * 380); }
       for (i = 0; i < 7; i++) { x.fillStyle = 'rgba(40,50,40,' + (.1 + rr() * .15) + ')'; x.beginPath(); x.ellipse(rr() * 512, rr() * 512, 30 + rr() * 70, 20 + rr() * 50, 0, 0, 7); x.fill(); }
       var gb = x.createLinearGradient(0, 380, 0, 512); gb.addColorStop(0, 'rgba(0,0,0,0)'); gb.addColorStop(1, 'rgba(0,0,0,.45)'); x.fillStyle = gb; x.fillRect(0, 380, 512, 132);
       return T(c, 2, 1);
     }
-    function ceilTex() { var c = cvs(256, 256), x = c.getContext('2d'); x.fillStyle = '#3a342c'; x.fillRect(0, 0, 256, 256); noiseOn(x, 256, 256, 2500, .15); for (var i = 0; i < 6; i++) { x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(rr() * 256, rr() * 256, 20 + rr() * 40, 14 + rr() * 30, 0, 0, 7); x.fill(); } return T(c, 3, 3); }
+    function ceilTex() { var c = cvs(256, 256), x = c.getContext('2d'); x.fillStyle = '#6a6254'; x.fillRect(0, 0, 256, 256); noiseOn(x, 256, 256, 2500, .15); for (var i = 0; i < 6; i++) { x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(rr() * 256, rr() * 256, 20 + rr() * 40, 14 + rr() * 30, 0, 0, 7); x.fill(); } return T(c, 3, 3); }
     function webTex() {
       var c = cvs(256, 256), x = c.getContext('2d'); x.strokeStyle = 'rgba(235,235,235,.8)'; x.lineWidth = 1.2;
       for (var a = 0; a <= 8; a++) { var an = a / 8 * PI / 2; x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(an) * 256, Math.sin(an) * 256); x.stroke(); }
@@ -105,7 +105,7 @@
     var steel = M(0x2a2f3a, .5, .6), frameM = M(0x4b4d52, .8, .2);
     box(cg, .34, .22, DW + .6, frameM, 9.88, DH + .1, DZ); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ - DW / 2 - .1); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ + DW / 2 + .1);
     var door = new THREE.Group(); door.position.set(9.96, 0, DZ - DW / 2); cg.add(door);
-    var dm = new THREE.MeshStandardMaterial({ map: doorTex(), roughness: .6, metalness: .45 }); dm.envMapIntensity = .5;
+    var dmT = doorTex(), dm = new THREE.MeshStandardMaterial({ map: dmT, roughness: .7, metalness: .15, emissive: 0xffffff, emissiveMap: dmT, emissiveIntensity: .45 }); dm.envMapIntensity = .3;
     var leaf = new THREE.Mesh(new THREE.BoxGeometry(.12, DH - .05, DW), [M(0x2e3a33, .7, .4), dm, M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4)]);
     /* лицевая сторона смотрит в комнату (−x): материал с индексом 1 (−x) */
     leaf.position.set(0, (DH - .05) / 2 + .02, DW / 2); leaf.castShadow = leaf.receiveShadow = true; door.add(leaf);
@@ -137,9 +137,10 @@
 
     /* ---------- склад: оболочка ---------- */
     var shellMats = [wallTexS, wallTexS, ceilTex, floorTex, wallTexS, wallTexS].map(function (f, i) {
-      var m = new THREE.MeshStandardMaterial({ map: f(), roughness: .95, side: THREE.BackSide }); m.envMapIntensity = .15; if (i == 3) { m.roughness = .85; m.bumpMap = m.map; m.bumpScale = .5; } return m;
+      var m = new THREE.MeshStandardMaterial({ map: f(), roughness: .95, side: THREE.BackSide }); m.envMapIntensity = .15; if (m.emissive) { m.emissive.set(0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = .5; } if (i == 3) { m.roughness = .85; m.bumpMap = m.map; m.bumpScale = .5; } return m;
     });
     var shell = new THREE.Mesh(new THREE.BoxGeometry(X1 - X0, RH, Z1 - Z0), shellMats); shell.position.set((X0 + X1) / 2, RH / 2, (Z0 + Z1) / 2); shell.receiveShadow = true; shell.castShadow = true; rm.add(shell);
+    var shellOut = new THREE.Mesh(shell.geometry, M(0x4a423a, .95)); shellOut.position.copy(shell.position); shellOut.castShadow = false; shellOut.receiveShadow = true; rm.add(shellOut);   // снаружи — глухие стены, чтобы не было видно «насквозь»
     /* потолочные балки, трубы */
     var wood = M(0x2c2218, .9);
     [-1.9, 0, 1.9].forEach(function (z) { box(rm, X1 - X0, .35, .3, wood, (X0 + X1) / 2, RH - .18, DZ + z); });
@@ -505,7 +506,7 @@
         motes.geometry.setDrawRange(0, vis);
         for (var m = 0; m < vis; m++) { var ix = m * 3; p.array[ix] += Math.sin(now * .0004 + m) * dt * .08; p.array[ix + 1] += Math.cos(now * .0003 + m * 1.7) * dt * .06 - dt * .01; p.array[ix + 2] += Math.sin(now * .0005 + m * 2.3) * dt * .08; if (p.array[ix + 1] < .3) p.array[ix + 1] = RH - .8; }
         p.needsUpdate = true;
-        fl -= dt; var base = st >= 5 ? 2.6 : 1.9 + (1 - dirt) * .5, f = 1;
+        fl -= dt; var base = st >= 5 ? 3.4 : 2.6 + (1 - dirt) * .6, f = 1;
         if (st < 5) { if (fl <= 0 && Math.random() < .012) fl = .12 + Math.random() * .25; f = fl > 0 ? .25 + Math.random() * .4 : 1 + Math.sin(now * .013) * .03; }
         lamp.intensity = base * f; lamp.color.setHex(st >= 5 ? 0xfff0d8 : 0xffc27a); bulb.material.color.setHex(f < .7 ? 0x6a5a40 : 0xffe2b0);
         grime.material.opacity = .08 + dirt * .3; beamM.opacity = .4 * (.5 + dirt * .5);
