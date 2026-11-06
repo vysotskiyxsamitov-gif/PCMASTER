@@ -19,7 +19,7 @@
   function go() {
     var PI = Math.PI;
     /* ---------- позиции ---------- */
-    var DZ = 1.9, DW = 1.5, DH = 3.3;                       // дверь в правой стене (x=10)
+    var DZ = 1.9, DW = 2.2, DH = 4.0, BAGCAP = 6;                       // дверь в правой стене (x=10)
     var X0 = 10.03, X1 = 16.6, Z0 = DZ - 3.3, Z1 = DZ + 3.3, RH = 5.4, ZD = DZ + 2.6;   // склад
     var TOTAL = 0;
 
@@ -54,7 +54,7 @@
       x.globalCompositeOperation = 'destination-in'; x.beginPath(); x.moveTo(40, 640);
       var pts = [[30, 520], [60, 400], [28, 300], [70, 200], [50, 120], [110, 60], [180, 90], [230, 30], [290, 70], [350, 24], [420, 80], [470, 150], [440, 230], [490, 330], [455, 440], [490, 540], [470, 640]];
       pts.forEach(function (p) { x.lineTo(p[0] + (rr() - .5) * 26, p[1] + (rr() - .5) * 26); }); x.closePath(); x.fill();
-      x.globalCompositeOperation = 'destination-out'; x.fillRect(150, 190, 215, 450);             // проём двери
+      x.globalCompositeOperation = 'destination-out'; x.fillRect(256 - DW / 5.4 * 256, 640 * (1 - DH / 6.2), DW / 5.4 * 512, 640 * DH / 6.2 + 2);   // проём двери
       x.globalCompositeOperation = 'source-over';
       return T(c, 0, 0);
     }
@@ -100,18 +100,18 @@
     var animL = [], items = [], dustP = null;
 
     /* ---------- пролом: кирпич вокруг двери ---------- */
-    var patch = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 4.8), new THREE.MeshStandardMaterial({ map: brickTex(), transparent: true, roughness: .95, alphaTest: .05 }));
-    patch.rotation.y = -PI / 2; patch.position.set(9.95, 2.4, DZ); patch.receiveShadow = true; patch.userData.keep = 1; cg.add(patch);
+    var patch = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 6.2), new THREE.MeshStandardMaterial({ map: brickTex(), transparent: true, roughness: .95, alphaTest: .05 }));
+    patch.rotation.y = -PI / 2; patch.position.set(9.95, 3.1, DZ); patch.receiveShadow = true; patch.userData.keep = 1; cg.add(patch);
     var steel = M(0x2a2f3a, .5, .6), frameM = M(0x4b4d52, .8, .2);
-    box(cg, .34, .4, DW + .5, frameM, 9.88, DH + .15, DZ); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ - DW / 2 - .1); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ + DW / 2 + .1);
+    box(cg, .34, .22, DW + .6, frameM, 9.88, DH + .1, DZ); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ - DW / 2 - .1); box(cg, .34, DH, .2, frameM, 9.88, DH / 2, DZ + DW / 2 + .1);
     var door = new THREE.Group(); door.position.set(9.96, 0, DZ - DW / 2); cg.add(door);
     var dm = new THREE.MeshStandardMaterial({ map: doorTex(), roughness: .6, metalness: .45 }); dm.envMapIntensity = .5;
-    var leaf = new THREE.Mesh(new THREE.BoxGeometry(.1, DH - .05, DW), [M(0x2e3a33, .7, .4), dm, M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4)]);
+    var leaf = new THREE.Mesh(new THREE.BoxGeometry(.12, DH - .05, DW), [M(0x2e3a33, .7, .4), dm, M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4), M(0x2e3a33, .7, .4)]);
     /* лицевая сторона смотрит в комнату (−x): материал с индексом 1 (−x) */
     leaf.position.set(0, (DH - .05) / 2 + .02, DW / 2); leaf.castShadow = leaf.receiveShadow = true; door.add(leaf);
-    var hnd = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .22, 8), M(0xb8b8bd, .3, .9)); hnd.rotation.z = PI / 2; hnd.position.set(-.1, 1.7, DW - .2); door.add(hnd);
+    var hnd = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .22, 8), M(0xb8b8bd, .3, .9)); hnd.rotation.z = PI / 2; hnd.position.set(-.12, 2.0, DW - .25); hnd.scale.set(1.4, 1.4, 1.4); door.add(hnd);
     /* замок с цепью */
-    var lock = new THREE.Group(); lock.position.set(-.1, 1.62, DW - .35); door.add(lock);
+    var lock = new THREE.Group(); lock.position.set(-.12, 1.8, DW - .45); lock.scale.set(1.3, 1.3, 1.3); door.add(lock);
     box(lock, .08, .22, .17, M(0xb4883a, .35, .8), 0, 0, 0);
     var sh = new THREE.Mesh(new THREE.TorusGeometry(.07, .018, 8, 14, PI), M(0xc9ccd2, .3, .9)); sh.rotation.z = 0; sh.position.set(0, .12, 0); sh.rotation.y = PI / 2; lock.add(sh);
     for (var li = 0; li < 3; li++) { var lk = new THREE.Mesh(new THREE.TorusGeometry(.05, .014, 6, 10), M(0x6b6f78, .5, .8)); lk.position.set(-.02, -.18 - li * .08, 0); lk.rotation.y = li % 2 ? 0 : PI / 2; lock.add(lk); }
@@ -214,12 +214,19 @@
     var LB = { trash: 'мусор убран', web: 'паутина снята', stain: 'пятно оттёрто', pile: 'пыль подметена' };
     function clean(it) {
       if (it.done || !inStore() || sst() != 4) return;
-      it.done = true; var s = SK(); if (s.cl.indexOf(it.id) < 0) s.cl.push(it.id);
+      var s = SK();
+      if (it.kind == 'trash') {
+        if (!s.bag) { try { sfx('error'); } catch (e) { } toast('Нужен мусорный пакет — он в шкафчике стола (средний ящик верстака).'); return; }
+        if (s.bn >= BAGCAP) { try { sfx('error'); } catch (e) { } toast('Пакет полон! Выброси его в мусорный бак у двери (рядом с кулером).'); return; }
+        s.bn++;
+      }
+      it.done = true; if (s.cl.indexOf(it.id) < 0) s.cl.push(it.id);
       try { sfx(it.kind == 'trash' ? 'place' : 'buy'); } catch (e) { }
       animL.push({ o: it.obj, t: 0, kind: it.kind, y0: it.obj.position.y });
       it.obj.userData.act = null;
-      var left = TOTAL - s.cl.length; toast(LB[it.kind] + ' · осталось ' + left); save(); prog();
-      if (left <= 0) setTimeout(finish, 900);
+      var left = TOTAL - s.cl.length; toast(LB[it.kind] + ' · осталось ' + left + (it.kind == 'trash' ? ' · в пакете ' + s.bn + '/' + BAGCAP : '')); save(); prog(); inv();
+      if (left <= 0) { if (!s.bn) setTimeout(finish, 900); else toast('Всё убрано! Осталось выбросить пакет в бак у двери.'); }
+      else if (s.bn >= BAGCAP) toast('Пакет полон — выброси в бак у двери, потом продолжай.');
     }
     function applyClean() {
       var s = SK(); items.forEach(function (it) {
@@ -231,7 +238,35 @@
     function setActs() {
       var st = sst(); doorHit.userData.act = st >= 1 ? doorAct : null;
       items.forEach(function (it) { it.obj.userData.act = (st == 4 && !it.done) ? function () { clean(it); } : null; });
-      crateHit.userData.act = st == 5 ? openCrate : null;
+      crateHit.userData.act = st == 5 ? openCrate : null; binHit.userData.act = st == 4 ? dumpBin : null;
+    }
+    /* ---------- мусорный бак у двери и пакет ---------- */
+    var bin = new THREE.Group(); bin.position.set(9.3, 0, 3.4); cg.add(bin);
+    var binM = M(0x2f5d3a, .5, .3);
+    mesh(bin, new THREE.CylinderGeometry(.36, .3, .95, 18), binM, 0, .475, 0); mesh(bin, new THREE.CylinderGeometry(.38, .38, .06, 18), M(0x244a2e, .5, .3), 0, .98, 0); mesh(bin, new THREE.CylinderGeometry(.06, .06, .12, 8), M(0x111111, .6), 0, 1.06, 0);
+    [-1, 1].forEach(function (s) { mesh(bin, new THREE.TorusGeometry(.14, .02, 6, 12), M(0x999999, .4, .8), s * .35, .6, 0).rotation.y = PI / 2; });
+    for (var bi = 0; bi < 4; bi++) mesh(bin, new THREE.BoxGeometry(.02, .8, .02), M(0x1e3b26, .6), Math.cos(bi * 1.57) * .33, .5, Math.sin(bi * 1.57) * .33);
+    lp(bin, 'МУСОР', .6, .2, -.37, .6, 0, '#fff', '#166534', -PI / 2);
+    var binHit = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.2, .9), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); binHit.position.set(0, .6, 0); bin.add(binHit);
+    function dumpBin() {
+      var s = SK(); if (s.st != 4) return;
+      if (!s.bag) { toast('Мусорный бак. Сначала возьми пакет в ящике верстака и набери мусора.'); return; }
+      if (!s.bn) { toast('Пакет пуст — собери мусор на складе.'); return; }
+      toast('Мусор выброшен в бак (' + s.bn + ' шт.). Пакет снова пуст.'); try { sfx('place'); } catch (e) { }
+      s.bn = 0; save(); inv(); prog();
+      if (TOTAL - s.cl.length <= 0) setTimeout(finish, 700);
+    }
+    var bagMesh = null;
+    function makeBag(d) {
+      bagMesh = new THREE.Group(); bagMesh.position.set(.3, -.06, -.4); bagMesh.visible = false; d.add(bagMesh);
+      var bm = new THREE.MeshStandardMaterial({ color: 0x15181f, roughness: .35 }); var rl = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .4, 12), bm); rl.rotation.z = PI / 2; bagMesh.add(rl);
+      var lb = new THREE.Mesh(new THREE.BoxGeometry(.09, .14, .02), new THREE.MeshBasicMaterial({ color: 0xfacc15 })); lb.position.set(0, .0, .075); bagMesh.add(lb);
+      var gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex(), color: 0xffd966, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .6 })); gl.scale.set(.4, .4, .4); bagMesh.add(gl);
+    }
+    function takeBag() {
+      var s = SK(); if (s.st != 4 || s.bag || !bagMesh) return;
+      s.bag = 1; s.bn = 0; bagMesh.visible = false; bagMesh.userData.act = null; try { sfx('buy'); } catch (e) { }
+      toast('Мусорный пакет взят. Собирай мусор [E]; когда пакет наполнится — выброси его в бак у двери.'); save(); inv(); setActs();
     }
     /* ---------- награда ---------- */
     var crate = new THREE.Group(); crate.position.set(X1 - 1.0, 0, DZ + 1.4); crate.rotation.y = -PI / 2; crate.visible = false; rm.add(crate);
@@ -276,7 +311,8 @@
       if (d.userData.moving) return; var op = !d.userData.open; d.userData.open = op; d.userData.moving = 1;
       animL.push({ o: d, t: 0, kind: 'drawer', from: d.position.z, to: d.userData.z0 + (op ? .75 : 0) });
       try { sfx('door'); } catch (e) { }
-      var s = SK(); if (!op && keyMesh) { keyMesh.userData.act = null; }
+      var s = SK(); if (!op && keyMesh) { keyMesh.userData.act = null; } if (!op && bagMesh) bagMesh.userData.act = null;
+      if (op && d === drawers[1] && s.st == 4 && !s.bag && bagMesh) { bagMesh.visible = true; bagMesh.userData.act = takeBag; toast('В шкафчике — рулон мусорных пакетов. Нажми E, чтобы взять.'); }
       if (op && d === drawers[2]) { if (s.st == 2 && !s.key) { keyMesh.visible = true; keyMesh.userData.act = takeKey; toast('В ящике что-то блестит — это ключ! Нажми E.'); } else if (!s.key) toast('Старые винты, карандаши… ничего полезного.'); }
     }
     function takeKey() {
@@ -284,7 +320,7 @@
       s.key = 1; s.st = 3; keyMesh.visible = false; keyMesh.userData.act = null; setActs(); try { sfx('buy'); } catch (e) { } toast('Ключ от железной двери — в инвентаре. Дверь на правой стене.'); save(); inv();
     }
     function hookDrawers() {
-      var ds = window.__models && window.__models.drawers; if (ds && ds.length == 3) { drawers = ds; setupDrawer(ds[2]); ds[0].userData.act = function () { toggleDrawer(ds[0]); }; ds[1].userData.act = function () { toggleDrawer(ds[1]); }; return true; }
+      var ds = window.__models && window.__models.drawers; if (ds && ds.length == 3) { drawers = ds; setupDrawer(ds[2]); ds[0].userData.act = function () { toggleDrawer(ds[0]); }; ds[1].userData.act = function () { toggleDrawer(ds[1]); }; makeBag(ds[1]); return true; }
       return false;
     }
     if (!hookDrawers()) {
@@ -304,7 +340,7 @@
       s.st = 4; s.key = 0; setActs(); save(); inv(); try { sfx('door'); } catch (e) { }
       toast('Замок открыт.'); animL.push({ o: lock, t: 0, kind: 'lock' });
       setTimeout(function () { doorAnim = { t: 0, to: 1.5 }; try { sfx('door'); } catch (e) { } }, 700);
-      setTimeout(function () { try { talk([['Ты', 'Фу… сколько тут пыли. Лет двадцать никто не заходил.'], ['Ты', 'Нужно всё прибрать: мусор, паутина, пятна. Нажимай E на всём грязном.']], null); } catch (e) { } }, 2400);
+      setTimeout(function () { try { talk([['Ты', 'Фу… сколько тут пыли. Лет двадцать никто не заходил.'], ['Ты', 'Нужно всё прибрать: мусор, паутина, пятна. Нажимай E на всём грязном.'], ['Ты', 'Для мусора нужен пакет — возьму в шкафчике стола. А полные пакеты вынесу в бак у двери.']], null); } catch (e) { } }, 2400);
     }
 
     /* ============ СТЕНА: проём в стене ============ */
@@ -365,7 +401,7 @@
       debris.forEach(function (r) { var t = r.userData.t; r.position.set(t.x, t.y, t.z); t.done = 1; });
       dustSp.forEach(function (sp) { sp.userData.a = 0; sp.material.opacity = 0; });
       if (st >= 4) { applyClean(); } crate.visible = st >= 5; cGlow.visible = st == 5; cLid.rotation.x = st >= 6 ? -1.9 : 0;
-      keyMesh && (keyMesh.visible = false); drawers.forEach(function (d) { d.userData.open = false; d.position.z = d.userData.z0; });
+      keyMesh && (keyMesh.visible = false); bagMesh && (bagMesh.visible = false); drawers.forEach(function (d) { d.userData.open = false; d.position.z = d.userData.z0; });
       beam.visible = true; setActs(); prog(); inv();
     }
     function hideAll() { cg.visible = false; rm.visible = false; applyWall(false); lamp.intensity = 0; try { setActs(); } catch (e) { } }
@@ -375,7 +411,7 @@
     blocked = function (x, z) {
       var st = sst();
       if (st >= 4 && door.rotation.y > 1) {
-        if (x >= 6.9 && x <= 9.8 && Math.abs(z - DZ) < .8) return false;
+        if (x >= 6.9 && x <= 9.8 && Math.abs(z - DZ) < 1.0) return false;
         if (x > 9.8 && x < X1 - .5 && z > Z0 + .5 && z < Z1 - .5) return false;
       }
       return _bl(x, z);
@@ -388,7 +424,7 @@
     qText = function () {
       var st = sst(); if (st && st < 6 && !dark()) {
         var s = SK(), left = TOTAL - (s.cl || []).length;
-        return st == 1 ? 'Что-то обвалилось у правой стены — ответь на звонок' : st == 2 ? 'Найди ключ в ящиках верстака (верхний ящик)' : st == 3 ? 'Открой железную дверь на правой стене — ключ у тебя' : st == 4 ? 'Прибери склад: осталось ' + left + ' из ' + TOTAL : 'Загляни в старый ящик у дальней стены склада';
+        return st == 1 ? 'Что-то обвалилось у правой стены — ответь на звонок' : st == 2 ? 'Найди ключ в ящиках верстака (верхний ящик)' : st == 3 ? 'Открой железную дверь на правой стене — ключ у тебя' : st == 4 ? (!s.bag ? 'Возьми мусорный пакет в шкафчике стола (средний ящик верстака)' : (s.bn >= BAGCAP || (left <= 0 && s.bn)) ? 'Пакет полон — выброси его в бак у двери' : 'Прибери склад: осталось ' + left + ' из ' + TOTAL) : 'Загляни в старый ящик у дальней стены склада';
       }
       return _qt.apply(this, arguments);
     };
@@ -398,14 +434,17 @@
     var pgEl = document.createElement('div'); pgEl.className = 'g'; pgEl.style.cssText = 'position:fixed;left:10px;top:92px;z-index:30;display:none;pointer-events:none;min-width:190px;padding:8px 12px;font-size:13px';
     try { $('w').appendChild(invEl); $('w').appendChild(pgEl); } catch (e) { document.body.appendChild(invEl); document.body.appendChild(pgEl); }
     function inv() {
-      var s = G && G.ev && G.ev.sk, show = !!(s && s.key && s.st == 3) && mode == 'play' && !PZ;
-      invEl.innerHTML = '<div class="mu" style="margin-bottom:4px">ИНВЕНТАРЬ</div><div style="font-size:30px;line-height:1">🗝️</div><div style="font-size:12px;margin-top:3px">Ключ от склада</div>'; invEl.style.display = show ? 'block' : 'none';
+      var s = G && G.ev && G.ev.sk, k = !!(s && s.key && s.st == 3), b = !!(s && s.bag && s.st == 4), show = (k || b) && mode == 'play' && !PZ;
+      var h = '<div class="mu" style="margin-bottom:4px">ИНВЕНТАРЬ</div>';
+      if (k) h += '<div style="font-size:30px;line-height:1">🗝️</div><div style="font-size:12px;margin:3px 0 6px">Ключ от склада</div>';
+      if (b) h += '<div style="font-size:30px;line-height:1">🗑️</div><div style="font-size:12px;margin-top:3px">Пакет ' + (s.bn || 0) + ' / ' + BAGCAP + '</div>';
+      invEl.innerHTML = h; invEl.style.display = show ? 'block' : 'none';
     }
     function prog() {
       var s = G && G.ev && G.ev.sk, st = s ? s.st | 0 : 0, show = st == 4 && mode == 'play' && !PZ && inStore();
       if (!show) { pgEl.style.display = 'none'; return; }
       var n = s.cl.length, pc = Math.round(n / TOTAL * 100);
-      pgEl.innerHTML = '<b>Уборка склада</b> <span class="mu">' + n + ' / ' + TOTAL + '</span><div style="margin-top:6px;height:7px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:' + pc + '%;background:linear-gradient(90deg,#22d3ee,#a855f7)"></div></div><div class="mu" style="margin-top:5px">E — убрать · мусор, паутина, пятна, пыль</div>';
+      pgEl.innerHTML = '<b>Уборка склада</b> <span class="mu">' + n + ' / ' + TOTAL + '</span><div style="margin-top:6px;height:7px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:' + pc + '%;background:linear-gradient(90deg,#22d3ee,#a855f7)"></div></div><div class="mu" style="margin-top:5px">E — убрать · мусор нужно класть в пакет (ящик верстака) и выносить в бак у двери</div>';
       pgEl.style.display = 'block';
     }
     setInterval(function () { safe(function () { inv(); prog(); }); }, 400);
@@ -456,7 +495,7 @@
       for (var i = animL.length - 1; i >= 0; i--) {
         var a = animL[i]; a.t += dt;
         if (a.kind == 'drawer') { var u = Math.min(1, a.t / .35); a.o.position.z = a.from + (a.to - a.from) * (1 - Math.pow(1 - u, 2)); if (u >= 1) { a.o.userData.moving = 0; animL.splice(i, 1); } }
-        else if (a.kind == 'lock') { var u2 = Math.min(1, a.t / .6); lock.position.y = 1.62 - u2 * u2 * 1.2; lock.rotation.z = u2 * .6; if (u2 >= 1) { lock.visible = false; lock.position.y = 1.62; lock.rotation.z = 0; animL.splice(i, 1); } }
+        else if (a.kind == 'lock') { var u2 = Math.min(1, a.t / .6); lock.position.y = 1.8 - u2 * u2 * 1.4; lock.rotation.z = u2 * .6; if (u2 >= 1) { lock.visible = false; lock.position.y = 1.8; lock.rotation.z = 0; animL.splice(i, 1); } }
         else if (a.kind == 'lid') { var u3 = Math.min(1, a.t / .8); cLid.rotation.x = -1.9 * u3; if (u3 >= 1) animL.splice(i, 1); }
         else { var u4 = Math.min(1, a.t / .35); var sc = 1 - u4; a.o.scale.set(sc, sc, sc); a.o.position.y = (a.y0 || 0) + ((a.kind == 'trash' || a.kind == 'pile') ? u4 * .6 : 0); if (u4 >= 1) { a.o.visible = false; a.o.scale.set(1, 1, 1); a.o.position.y = a.y0 || 0; animL.splice(i, 1); } }
       }

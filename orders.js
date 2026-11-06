@@ -84,14 +84,23 @@
       return _serve.apply(this, arguments);
     };
 
-    /* автоматически: клиент у стойки заговаривает */
+    /* клиент у стойки ждёт: нужно навести прицел и нажать E — тогда он расскажет, что ему нужно (E — согласиться, Q — отказать) */
+    function labelSprite() {
+      var c = document.createElement('canvas'); c.width = 256; c.height = 72; var x = c.getContext('2d');
+      x.fillStyle = 'rgba(10,14,26,.88)'; x.beginPath(); x.moveTo(14, 4); x.lineTo(242, 4); x.quadraticCurveTo(252, 4, 252, 14); x.lineTo(252, 50); x.quadraticCurveTo(252, 60, 242, 60); x.lineTo(14, 60); x.quadraticCurveTo(4, 60, 4, 50); x.lineTo(4, 14); x.quadraticCurveTo(4, 4, 14, 4); x.fill();
+      x.strokeStyle = 'rgba(110,231,255,.8)'; x.lineWidth = 2; x.stroke(); x.fillStyle = '#fde68a'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('E — поговорить', 128, 33);
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false })); sp.scale.set(2.1, .6, 1); sp.position.set(0, 4.75, 0); sp.renderOrder = 10; return sp;
+    }
     setInterval(function () {
       safe(function () {
-        if (!G || mode != 'play' || (typeof PZ !== 'undefined' && PZ) || (typeof CALL !== 'undefined' && CALL) || A.lock || TK) return;
-        var c = CU.find(function (x) { return x.s == 'wait' && !x.asked && x.kind; });
-        if (c) ask(c);
+        if (!G) return;
+        CU.forEach(function (c) {
+          var show = c.s == 'wait' && !c.asked && c.kind;
+          if (show && !c.__lb && c.g && c.g.add) { c.__lb = labelSprite(); c.g.add(c.__lb); if (!c.__tip) { c.__tip = 1; toast('Клиент у стойки: наведи прицел на него и нажми [E], чтобы поговорить.'); } }
+          if (!show && c.__lb) { c.g.remove(c.__lb); c.__lb = null; }
+        });
       });
-    }, 500);
+    }, 400);
 
     /* ---------- РЕМОНТ ---------- */
     var SPOT = { x: -1.5, y: 2.16, z: -5.6 }, MON = { x: -2.55, z: -5.6 };
@@ -167,9 +176,40 @@
       var m = new THREE.Mesh(new THREE.SphereGeometry(.38, 16, 12), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .8, depthWrite: false }));
       m.position.set(0, 2.9, 1.0); return m;
     }
+    /* ---- видимая пыль внутри корпуса (неисправность «забит пылью») ---- */
+    function dustTex() {
+      var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d');
+      for (var i = 0; i < 70; i++) { var g = x.createRadialGradient(0, 0, 0, 0, 0, 1); x.save(); x.translate(20 + Math.random() * 88, 20 + Math.random() * 88); x.scale(8 + Math.random() * 26, 6 + Math.random() * 20); g.addColorStop(0, 'rgba(165,156,136,.55)'); g.addColorStop(1, 'rgba(165,156,136,0)'); x.fillStyle = g; x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill(); x.restore(); }
+      x.strokeStyle = 'rgba(150,142,125,.5)'; x.lineWidth = 1.2; for (i = 0; i < 40; i++) { x.beginPath(); var sx = Math.random() * 128, sy = Math.random() * 128; x.moveTo(sx, sy); x.quadraticCurveTo(sx + (Math.random() - .5) * 30, sy + (Math.random() - .5) * 30, sx + (Math.random() - .5) * 40, sy + (Math.random() - .5) * 40); x.stroke(); }
+      var t = new THREE.CanvasTexture(c); return t;
+    }
+    function addDust(g) {
+      var D = new THREE.Group(), tx = dustTex(), P0 = [[-.78, .9, .55], [-2.05, .15, .55], [-.2, 1.1, .5], [-1.35, -1.6, .6]];
+      function reg(m, op, sp) { m.userData.o = op; m.userData.z0 = m.position.z; m.userData.x0 = m.position.x; m.userData.y0 = m.position.y; m.userData.sp = sp; m.userData.s0 = m.scale.clone(); D.add(m); return m; }
+      P0.forEach(function (p, i) {                                      // пыльная пелена перед вентиляторами и платами
+        var m = new THREE.Mesh(new THREE.PlaneGeometry(1.8 + i * .3, 1.8 + i * .2), new THREE.MeshBasicMaterial({ map: tx, transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide }));
+        m.position.set(p[0], p[1], p[2]); m.rotation.z = i; reg(m, .8, 1.2);
+      });
+      for (var k = 0; k < 34; k++) {                                    // серые «валенки» пыли на деталях и на дне корпуса
+        var base = [[-.78, 1.6, -.4], [-2.0, .4, -.1], [-.15, 1.85, -.4], [-1.35, -1.35, .1], [0, -2.25, .6], [-2.5, -2.25, .3]][k % 6];
+        var s = new THREE.Mesh(new THREE.SphereGeometry(.12 + Math.random() * .2, 8, 6), new THREE.MeshStandardMaterial({ color: 0x9a927f, roughness: 1, transparent: true, opacity: .95 }));
+        s.scale.set(1.4 + Math.random(), .45, 1 + Math.random() * .6); s.position.set(base[0] + (Math.random() - .5) * 1.3, base[1], base[2] + (Math.random() - .5) * .9); reg(s, .95, 1.6 + Math.random());
+      }
+      for (k = 0; k < 14; k++) {                                         // свисающие нити пыли
+        var h = .3 + Math.random() * .5, st = new THREE.Mesh(new THREE.CylinderGeometry(.012, .008, h, 4), new THREE.MeshBasicMaterial({ color: 0xb4ac9a, transparent: true, opacity: .8 }));
+        st.position.set(-2.8 + Math.random() * 2.6, .3 + Math.random() * 1.6, .1 + Math.random() * .5); st.rotation.z = (Math.random() - .5) * .5; reg(st, .8, 2);
+      }
+      g.add(D); g.userData.dust = D; return D;
+    }
+    function blowDust(g, u) {
+      var D = g.userData.dust; if (!D) return;
+      D.children.forEach(function (m) { var d = m.userData; m.material.opacity = d.o * Math.max(0, 1 - Math.pow(u, 1.3)); m.position.z = d.z0 + u * d.sp * 3; m.position.x = d.x0 + Math.sin(u * 8 + d.sp) * .4 * u; m.position.y = d.y0 + u * .6; var q = 1 + u * .8; m.scale.set(d.s0.x * q, d.s0.y * q, d.s0.z * q); });
+      if (u >= 1) { g.remove(D); g.userData.dust = null; }
+    }
     function acceptRepair(c) {
       if (JOB) { toast('Верстак для ремонта занят.'); leaveC(c); return; }
       var g = buildPC(), mk = marker(0x7f1d1d); g.add(mk);
+      try { if (c.fault && c.fault.k == 'dust') addDust(g); } catch (e) { console.error(e); }
       JOB = { c: c, f: c.fault, g: g, fee: c.fee, conn: 0, on: 0, fixed: 0, mk: mk, busy: 0 };
       buildMonitor(JOB);
       g.userData.act = function () { repairAct(); };
@@ -248,8 +288,8 @@
       try { sfx('screw'); } catch (e) { }
       toast(f.work);
       var g = j.g, y0 = g.position.y;
-      tw(f.need >= 0 ? 4 : 5, function (u) { g.position.y = y0 + Math.sin(u * 40) * .006; g.rotation.z = Math.sin(u * 25) * .01; }, function () {
-        g.position.y = y0; g.rotation.z = 0; A.lock = 0; j.busy = 0;
+      tw(f.need >= 0 ? 4 : 5, function (u) { g.position.y = y0 + Math.sin(u * 40) * .006; g.rotation.z = Math.sin(u * 25) * .01; if (kind == 'dust') blowDust(g, u); }, function () {
+        g.position.y = y0; g.rotation.z = 0; A.lock = 0; j.busy = 0; if (g.userData.dust) blowDust(g, 1);
         if (part) { j.part = d0; consume(part); }
         j.fixed = 1; j.pay = Math.round(j.fee + (d0 ? d0.p * 1.3 : 0));
         g.traverse(function (o) { if (o.userData && o.userData.fan) o.userData.on = 1; });

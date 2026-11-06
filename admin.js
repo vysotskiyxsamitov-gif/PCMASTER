@@ -17,7 +17,7 @@
   C.help = ['показать список команд', function () {
     var rows = [
       'day N — перейти на день N (сюжетные события привязаны к дню)', 'skip [N] — закончить день (N раз)', 'money N — поставить деньги', 'debt N — поставить долг', 'parts [N] — добавить N случайных деталей на склад (по умолч. 4)',
-      '— СЦЕНЫ —', 'storage — запустить обвал стены и звонок Макса (склад)', 'storage key — выдать ключ от склада', 'storage open — открыть дверь, можно убираться', 'storage clean — склад убран, появился ящик с наградой', 'storage reward — выдать награду', 'storage reset — сбросить сюжет склада', 'storage go — телепорт к двери склада / внутрь',
+      '— СЦЕНЫ —', 'storage — запустить обвал стены и звонок Макса (склад)', 'storage key — выдать ключ от склада', 'storage open — открыть дверь, можно убираться', 'storage bag — выдать мусорный пакет', 'storage clean — склад убран, появился ящик с наградой', 'storage reward — выдать награду', 'storage reset — сбросить сюжет склада', 'storage go — телепорт к двери склада / внутрь',
       'blackout — выбить пробки (сцена со светом)', 'light — вернуть свет (рубильник включён)', 'call max | call viktor — тестовый звонок',
       'customer — позвать клиента сейчас', 'rob — запустить ограбление', 'book — открыть справочник',
       '— ПРОЧЕЕ —', 'tp store | door | bench | counter | out — телепорт', 'mood | realism | look — переключить атмосферу/тени/красоту', 'reset — сбросить все сюжетные флаги (G.ev)', 'where — где ты и состояние сюжетов', 'clear — очистить окно'];
@@ -36,7 +36,8 @@
     if (w == 'reset') { G.ev.sk = { st: 0, key: 0, cl: [] }; S.sync(); refresh(); return say('Сюжет склада сброшен (день ' + G.day + ')'); }
     if (w == 'key') { if (!s.st) s.st = 1; s.st = 3; s.key = 1; S.sync(); s.st = 3; s.key = 1; refresh(); return say('Ключ выдан. Иди к двери на правой стене.'); }
     if (w == 'open') { s.st = 4; s.key = 0; S.sync(); refresh(); return say('Дверь открыта — убирайся на складе.'); }
-    if (w == 'clean') { s.st = 5; s.cl = []; for (var i = 0; i < S.total; i++) s.cl.push(i); S.sync(); refresh(); return say('Склад чист. Ящик с наградой у дальней стены.'); }
+    if (w == 'bag') { s.st = Math.max(s.st, 4); s.bag = 1; s.bn = 0; S.sync(); refresh(); return say('Пакет выдан (бак — у двери, рядом с кулером).'); }
+    if (w == 'clean') { s.st = 5; s.bn = 0; s.cl = []; for (var i = 0; i < S.total; i++) s.cl.push(i); S.sync(); refresh(); return say('Склад чист. Ящик с наградой у дальней стены.'); }
     if (w == 'reward') { s.st = 5; S.sync(); say('Открой ящик на складе (E).'); return; }
     if (w == 'go') { if (s.st >= 4) P.set(13, 3.4, 1.9); else P.set(8.0, 3.4, 1.9); yaw = -1.57; return say('Телепорт.'); }
     say('Неизвестно: storage ' + w, '#f88');
