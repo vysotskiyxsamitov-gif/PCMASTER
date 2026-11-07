@@ -62,7 +62,8 @@
           }
         }
         k += (tgt - k) * .08;
-        gl.style.opacity = (k * .9).toFixed(3); wash.style.opacity = (k * .35).toFixed(3);
+        var vis = k > .01 ? 'block' : 'none'; if (gl.style.display !== vis) { gl.style.display = vis; wash.style.display = vis; }
+        if (k > .01) { gl.style.opacity = (k * .9).toFixed(3); wash.style.opacity = (k * .35).toFixed(3); }
         mat.opacity = Math.min(.5, .5 * amt * boost);
       } catch (e) { }
     })();

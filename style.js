@@ -10,7 +10,7 @@
   function ready() { try { return typeof THREE !== 'undefined' && !!scene && !!R && typeof mkP === 'function' && !!window.__modelsLoaded && !!document.getElementById('w'); } catch (e) { return false; } }
 
   function go() {
-    var ON = true; try { var sv = localStorage.getItem('pcstyle'); if (sv === '0') ON = false; } catch (e) { }
+    var ON = false; try { var sv = localStorage.getItem('pcstyle2'); if (sv === '1') ON = true; } catch (e) { }
     var TU = { value: ON ? 1 : 0 }, queue = [], seen = new WeakSet(), outlines = 0, MAXO = 150;
     var CODE = [
       '{',
@@ -93,7 +93,7 @@
     ov.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;mix-blend-mode:soft-light;opacity:.34;background:radial-gradient(ellipse at 15% 10%,#ff8fd0 0%,rgba(255,143,208,0) 55%),radial-gradient(ellipse at 90% 95%,#6fe3ff 0%,rgba(111,227,255,0) 60%)';
     document.getElementById('w').appendChild(ov);
 
-    function apply() { TU.value = ON ? 1 : 0; ov.style.display = ON ? 'block' : 'none'; setOutlines(ON); try { localStorage.setItem('pcstyle', ON ? '1' : '0'); } catch (e) { } }
+    function apply() { TU.value = ON ? 1 : 0; ov.style.display = ON ? 'block' : 'none'; setOutlines(ON); try { localStorage.setItem('pcstyle2', ON ? '1' : '0'); } catch (e) { } }
     apply();
     window.__style = { get: function () { return ON; }, set: function (v) { ON = !!v; apply(); }, toggle: function () { ON = !ON; apply(); try { toast('Аниме-стиль: ' + (ON ? 'вкл' : 'выкл')); } catch (e) { } } };
     console.log('[style] готово');
