@@ -146,7 +146,7 @@
     var _rend = R.render.bind(R), fr = 0;
     R.render = function (s, c) {
       if (s === scene && c === cam) {
-        if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ % (LV >= 2 ? 4 : 3)) === 0); }
+        if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ % (LV >= 2 ? 3 : 2)) === 0); }
         else if (!R.shadowMap.autoUpdate) R.shadowMap.autoUpdate = true;
       }
       return _rend(s, c);
