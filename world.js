@@ -401,22 +401,27 @@
     }
 
     /* ---------- машины ---------- */
-    var beamTex = ctex(128, 64, function (x, W, H) {
-      var g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(255,244,210,.9)'); g.addColorStop(1, 'rgba(255,244,210,0)');
-      x.fillStyle = g; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'destination-in';
-      var v = x.createLinearGradient(0, 0, 0, H); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(.5, 'rgba(0,0,0,1)'); v.addColorStop(1, 'rgba(0,0,0,0)');
+    var beamTex = ctex(256, 128, function (x, W, H) {   // конус света: узкий у фары, широкий и мягкий на дороге
+      var g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(255,246,214,1)'); g.addColorStop(.35, 'rgba(255,240,200,.55)'); g.addColorStop(1, 'rgba(255,236,190,0)');
+      x.fillStyle = g; x.beginPath(); x.moveTo(0, H * .46); x.lineTo(W, H * .04); x.lineTo(W, H * .96); x.lineTo(0, H * .54); x.closePath(); x.fill();
+      x.globalCompositeOperation = 'destination-in';
+      var v = x.createLinearGradient(0, 0, 0, H); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(.28, 'rgba(0,0,0,.8)'); v.addColorStop(.5, 'rgba(0,0,0,1)'); v.addColorStop(.72, 'rgba(0,0,0,.8)'); v.addColorStop(1, 'rgba(0,0,0,0)');
       x.fillStyle = v; x.fillRect(0, 0, W, H);
     });
     beamTex.wrapS = beamTex.wrapT = THREE.ClampToEdgeWrapping;
     var beamMat = new THREE.MeshBasicMaterial({ map: beamTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide });
     var carGlow = new THREE.SpriteMaterial({ map: glowTex, color: 0xfff0c0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    var carHalo = new THREE.SpriteMaterial({ map: glowTex, color: 0xffd98a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    var carCore = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    var carStreak = new THREE.SpriteMaterial({ map: glowTex, color: 0x9cc4ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    var tailGlow = new THREE.SpriteMaterial({ map: glowTex, color: 0xff2a2a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
     var headMat = new THREE.MeshStandardMaterial({ color: 0xfff6dd, emissive: 0xfff0c0, emissiveIntensity: .2 });
     var tailMat = new THREE.MeshStandardMaterial({ color: 0x7a0f14, emissive: 0xff2a2a, emissiveIntensity: .3 });
     var glassMat = stdM(0x1b2430, .12, .6), wheelMat = stdM(0x111214, .9, 0), hubMat = stdM(0x9aa0aa, .4, .8);
-    var WGEO = new THREE.CylinderGeometry(.75, .75, .5, 14), HGEO = new THREE.CylinderGeometry(.35, .35, .52, 10), BEAMG = new THREE.PlaneGeometry(20, 8);
+    var WGEO = new THREE.CylinderGeometry(.75, .75, .5, 14), HGEO = new THREE.CylinderGeometry(.35, .35, .52, 10), BEAMG = new THREE.PlaneGeometry(26, 12);
     [WGEO, HGEO, BEAMG].forEach(function (g) { g.userData.shared = 1; });
     var bodyCache = {}, CARC = [0xdc2626, 0x2563eb, 0xe5e7eb, 0xfacc15, 0x16a34a, 0x7c3aed, 0x1f2937, 0x94a3b8, 0xea580c, 0x0f766e];
-    function bodyMat(c) { return bodyCache[c] || (bodyCache[c] = stdM(c, .32, .55, { envMapIntensity: 1 })); }
+    function bodyMat(c) { return bodyCache[c] || (bodyCache[c] = stdM(c, .26, .6, { envMapIntensity: 1.6 })); }
     function mkCar(color, kind) {
       kind = kind || 'sedan';
       var g = new THREE.Group(), bm = bodyMat(color), L = kind == 'van' ? 8.6 : kind == 'hatch' ? 8 : 9.2;
@@ -433,8 +438,11 @@
       }); });
       [-1.25, 1.25].forEach(function (z) {
         box(g, .15, .4, .85, headMat, L / 2, 1.4, z); box(g, .15, .38, .85, tailMat, -L / 2, 1.45, z);
-        var sp = new THREE.Sprite(carGlow); sp.scale.set(3.4, 3.4, 1); sp.position.set(L / 2 + .4, 1.4, z); sp.renderOrder = 4; g.add(sp);
+        var sp = new THREE.Sprite(carHalo); sp.scale.set(7.5, 7.5, 1); sp.position.set(L / 2 + .5, 1.4, z); sp.renderOrder = 4; g.add(sp);
+        var sc = new THREE.Sprite(carCore); sc.scale.set(1.9, 1.9, 1); sc.position.set(L / 2 + .3, 1.4, z); sc.renderOrder = 5; g.add(sc);
       });
+      var stk = new THREE.Sprite(carStreak); stk.scale.set(13, 1.1, 1); stk.position.set(L / 2 + .6, 1.4, 0); stk.renderOrder = 4; g.add(stk);   // горизонтальный блик линзы
+      var tl = new THREE.Sprite(tailGlow); tl.scale.set(6.5, 2.2, 1); tl.position.set(-L / 2 - .4, 1.45, 0); tl.renderOrder = 4; g.add(tl);
       var bm2 = new THREE.Mesh(BEAMG, beamMat); bm2.rotation.x = -PI / 2; bm2.position.set(L / 2 + 10, .09, 0); bm2.renderOrder = 3; g.add(bm2);
       g.userData.L = L; scene.add(g); return g;
     }
@@ -642,7 +650,7 @@
       shopMats.forEach(function (m) { m.emissiveIntensity = Math.max(.15, ENV.winF * 1.2); });
       lampHeadMat.emissiveIntensity = .1 + 2 * ENV.lampF; lampGlowMat.opacity = ENV.lampF * .85;
       headMat.emissiveIntensity = .2 + 1.8 * ENV.lampF; tailMat.emissiveIntensity = .3 + .9 * ENV.lampF;
-      carGlow.opacity = ENV.lampF * .8; beamMat.opacity = ENV.lampF * .55 + (WX.fog > .3 ? .15 : 0);
+      carGlow.opacity = ENV.lampF * .8; carHalo.opacity = ENV.lampF * .5 + (WX.fog > .3 ? .15 : 0); carCore.opacity = ENV.lampF * .95; carStreak.opacity = ENV.lampF * .38; tailGlow.opacity = ENV.lampF * .55; beamMat.opacity = ENV.lampF * .7 + (WX.fog > .3 ? .15 : 0);
       if (roadMat) { roadMat.roughness = lerp(.92, .3, WX.wet); roadMat.metalness = lerp(0, .25, WX.wet); }
       if (snowMat) snowMat.opacity = WX.snowAcc * .78 * (.35 + .65 * (dayF + .2));
       updPatches();

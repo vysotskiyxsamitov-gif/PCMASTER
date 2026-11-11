@@ -165,6 +165,26 @@
       if (bad) unbatch(r.chunks[0]);
     }
   }
+  /* что реально рисуется: меши в кадре, прозрачные, спрайты, тени; по крупным веткам сцены */
+  function breakdown(full) {
+    if (typeof cam === 'undefined' || !cam || !scene) return null;
+    cam.updateMatrixWorld(); var fr = new THREE.Frustum(), pm = new THREE.Matrix4(); pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); fr.setFromProjectionMatrix(pm);
+    var r = { mesh: 0, calls: 0, trans: 0, sprite: 0, cast: 0, lights: 0, shLights: 0, cull: 0 }, br = new Map();
+    scene.traverse(function (o) {
+      if (o.isLight) { r.lights++; if (o.castShadow) r.shLights++; return; }
+      if (!(o.isMesh || o.isSprite || o.isLine || o.isPoints)) return;
+      if (o.castShadow) r.cast++;
+      var vis = true; for (var p = o; p; p = p.parent) if (!p.visible) { vis = false; break; }
+      if (!vis) return;
+      var inF = true; try { inF = o.frustumCulled === false || (o.geometry && (o.geometry.boundingSphere || o.geometry.computeBoundingSphere(), fr.intersectsObject(o))) || o.isSprite; } catch (e) { }
+      if (!inF) { r.cull++; return; }
+      var n = Array.isArray(o.material) ? (o.geometry.groups.length || 1) : 1; r.mesh++; r.calls += n;
+      var m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.transparent) r.trans += n; if (o.isSprite) r.sprite++;
+      if (full) { var top = o; while (top.parent && !top.parent.isScene) top = top.parent; var k = (top.userData && top.userData.batchRoot ? 'СКЛЕЕННОЕ' : (top === o ? 'одиночный ' + (o.isSprite ? 'спрайт' : 'меш') : 'группа #' + scene.children.indexOf(top) + ' (' + (top.children ? top.children.length : 0) + ')')); br.set(k, (br.get(k) || 0) + n); }
+    });
+    if (full) { var arr = Array.from(br.entries()).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 15); r.top = arr; console.log('[batch] в кадре', JSON.stringify(r)); console.table(arr.map(function (e) { return { ветка: e[0], вызовов: e[1] }; })); }
+    return r;
+  }
   var floor = Math.floor, watchOn = 0;
   function run(again) {
     if ((done && !again) || !ON || !ok()) return; done = true;
@@ -181,7 +201,7 @@
   }
   /* счётчик нагрузки: FPS, вызовы отрисовки, треугольники */
   var hudEl = null, hudOn = false, frames = 0, tPrev = performance.now(), fps = 0;
-  (function tick() { requestAnimationFrame(tick); frames++; var n = performance.now(); if (n - tPrev >= 500) { fps = Math.round(frames * 1000 / (n - tPrev)); frames = 0; tPrev = n; if (hudOn && hudEl) { var i = (typeof R !== 'undefined' && R.info) ? R.info : null; hudEl.textContent = fps + ' FPS\nвызовов ' + (i ? i.render.calls : '?') + '\nтреугольников ' + (i ? i.render.triangles : '?') + '\nобъектов ' + (i ? i.memory.geometries : '?') + (done && stat.out ? '\nсклеено ' + stat.src + '→' + stat.out : ''); } } })();
+  (function tick() { requestAnimationFrame(tick); frames++; var n = performance.now(); if (n - tPrev >= 500) { fps = Math.round(frames * 1000 / (n - tPrev)); frames = 0; tPrev = n; if (hudOn && hudEl) { var i = (typeof R !== 'undefined' && R.info) ? R.info : null; hudEl.textContent = fps + ' FPS\nвызовов ' + (i ? i.render.calls : '?') + '\nтреугольников ' + (i ? i.render.triangles : '?') + '\nобъектов ' + (i ? i.memory.geometries : '?') + (done && stat.out ? '\nсклеено ' + stat.src + '→' + stat.out : ''); try { var b = breakdown(false); if (b) hudEl.textContent += '\nв кадре: мешей ' + b.mesh + ' (≈' + b.calls + ' выз.)\nпрозрачных ' + b.trans + ', спрайтов ' + b.sprite + '\nтени: кастеров ' + b.cast + ', света с тенью ' + b.shLights; } catch (e) { } } } })();
   function hud(v) {
     hudOn = v === undefined ? !hudOn : !!v;
     if (hudOn && !hudEl) { hudEl = document.createElement('pre'); hudEl.style.cssText = 'position:fixed;left:max(8px,env(safe-area-inset-left,0px));top:max(8px,env(safe-area-inset-top,0px));margin:0;padding:6px 9px;border-radius:8px;background:rgba(0,0,0,.6);color:#7cf0b2;font:12px/1.35 Consolas,monospace;z-index:99998;pointer-events:none;white-space:pre'; document.body.appendChild(hudEl); }
@@ -192,6 +212,6 @@
     hud: hud, hudOn: function () { return hudOn; },
     get: function () { return ON; },
     toggle: function () { ON = !ON; try { localStorage.setItem('pcbatch', ON ? '1' : '0'); } catch (e) { } if (typeof toast == 'function') toast('Объединение объектов: ' + (ON ? 'включено, применится после перезапуска' : 'выключено, применится после перезапуска')); },
-    run: run, why: report, again: function () { run(true); }, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
+    run: run, why: report, top: function () { return breakdown(true); }, again: function () { run(true); }, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
   };
 })();

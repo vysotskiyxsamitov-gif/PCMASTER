@@ -143,11 +143,16 @@
     })(last);
 
     /* тени обновляем через кадр (в 2 раза дешевле; движение персонажей это почти не портит) */
-    var _rend = R.render.bind(R), fr = 0;
+    var _rend = R.render.bind(R), fr = 0, hemiL = null;
     R.render = function (s, c) {
       if (s === scene && c === cam) {
         if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ % (LV >= 2 ? 3 : 2)) === 0); }
         else if (!R.shadowMap.autoUpdate) R.shadowMap.autoUpdate = true;
+        /* глубокие тени: на время кадра приглушаем рассеянный «заполняющий» свет, тогда тени темнее и объёмнее */
+        if (LV >= 1 && !window.__noDeepShadow) {
+          if (!hemiL || !hemiL.parent) { hemiL = null; s.traverse(function (o) { if (o.isHemisphereLight && !hemiL) hemiL = o; }); }
+          if (hemiL) { var h0 = hemiL.intensity; hemiL.intensity = h0 * (LV >= 2 ? .74 : .84); try { return _rend(s, c); } finally { hemiL.intensity = h0; } }
+        }
       }
       return _rend(s, c);
     };
