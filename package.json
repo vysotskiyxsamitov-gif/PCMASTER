@@ -53,6 +53,7 @@
       "batch.js",
       "glb.js",
       "models/pack.js",
+      "pack.js",
       "models/*.glb"
     ],
     "win": {
