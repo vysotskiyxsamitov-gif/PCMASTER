@@ -49,7 +49,11 @@
       "admin.js",
       "three.min.js",
       "rays.js",
-      "loadscreen.js"
+      "loadscreen.js",
+      "batch.js",
+      "glb.js",
+      "models/pack.js",
+      "models/*.glb"
     ],
     "win": {
       "target": "nsis"

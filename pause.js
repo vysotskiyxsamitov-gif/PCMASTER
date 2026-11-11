@@ -6,7 +6,7 @@ var PZ = 0;
 var pzWas = false;
 
 var pzTab = 'g';
-var PZ_BUILD = 'сборка 05.11-L';
+var PZ_BUILD = 'сборка 11.11-R';
 
 function pzCss() {
   if (document.getElementById('pzcss')) return;
@@ -54,6 +54,8 @@ function pauseDraw() {
   } else if (pzTab == 'v') {
     body = pzRow('Высокое качество', opt.q, 'opt.q=!opt.q;rs();pauseDraw()', 1) +
       pzRow('Реализм (тени, детали)', window.__rz ? window.__rz.name() : 'нет', 'window.__rz&&window.__rz.cycle();pauseDraw()') +
+      pzRow('Показывать FPS и нагрузку', !!(window.__batch && window.__batch.hudOn()), 'window.__batch&&window.__batch.hud();pauseDraw()', 1) +
+      pzRow('Объединение объектов (бета)', !!(window.__batch && window.__batch.get()), 'window.__batch&&window.__batch.toggle();pauseDraw()', 1) +
       pzRow('Красота (паркет, лучи)', !!(window.__look && window.__look.get()), 'window.__look&&window.__look.toggle();pauseDraw()', 1) +
       pzRow('Аниме-стиль (как MiSide)', !!(window.__style && window.__style.get()), 'window.__style&&window.__style.toggle();pauseDraw()', 1) +
       pzRow('Атмосфера (мрак, зерно)', !!(window.__mood && window.__mood.get()), 'window.__mood&&window.__mood.toggle();pauseDraw()', 1) +

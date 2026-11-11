@@ -3,7 +3,7 @@
 (function () {
   if (window.__menu2Loaded) return;
   window.__menu2Loaded = 1;
-  var BUILD = 'сборка 05.11-L';
+  var BUILD = 'сборка 11.11-R';
 
   function ready() { try { return typeof UI === 'function' && typeof play === 'function' && typeof cont === 'function' && typeof ld === 'function' && !!document.getElementById('ui'); } catch (e) { return false; } }
 
@@ -73,7 +73,7 @@
         '<h5>ЗВУК</h5>' + row('Звуки', opt.s, 'opt.s=!opt.s;UI()', 1) + row('Озвучка героя', opt.v, 'opt.v=!opt.v;UI()', 1) +
         '<h5>УПРАВЛЕНИЕ</h5>' + row('Чувствительность мыши', '× ' + (opt.ms || 1), 'opt.ms=[.5,.75,1,1.5,2][' + ((mi + 1) % 5) + '];UI()') + row('Инверсия оси Y', opt.inv, 'opt.inv=!opt.inv;UI()', 1) + row('Плавная камера', opt.sm, 'opt.sm=opt.sm?0:1;UI()', 1) +
         '<h5>ГРАФИКА</h5>' + row('Высокое качество', opt.q, 'opt.q=!opt.q;rs();UI()', 1) + row('Ультра-отражения', opt.ul !== 0, 'opt.ul=opt.ul===0?1:0;UI()', 1) + row('Свечение неона', opt.bl !== 0, 'opt.bl=opt.bl===0?1:0;UI()', 1) + row('Размытие при повороте', opt.mb !== 0, 'opt.mb=opt.mb===0?1:0;UI()', 1) +
-        (rz ? row('Реализм (тени)', rz.name(), 'window.__rz.cycle();UI()') : '') + (lk ? row('Красота (паркет, лучи)', lk.get(), 'window.__look.toggle();UI()', 1) : '') + (window.__style ? row('Аниме-стиль (как MiSide)', window.__style.get(), 'window.__style.toggle();UI()', 1) : '') + (md ? row('Атмосфера (мрак, зерно)', md.get(), 'window.__mood.toggle();UI()', 1) : '') +
+        (rz ? row('Реализм (тени)', rz.name(), 'window.__rz.cycle();UI()') : '') + (window.__batch ? row('Объединение объектов (бета)', window.__batch.get(), 'window.__batch.toggle();UI()', 1) : '') + (lk ? row('Красота (паркет, лучи)', lk.get(), 'window.__look.toggle();UI()', 1) : '') + (window.__style ? row('Аниме-стиль (как MiSide)', window.__style.get(), 'window.__style.toggle();UI()', 1) : '') + (md ? row('Атмосфера (мрак, зерно)', md.get(), 'window.__mood.toggle();UI()', 1) : '') +
         '</div><div class="ac"><button class="bn dg" onclick="__m2conf()">Стереть сохранение</button><button class="bn pr2" onclick="mode=\'menu\';UI()">Назад</button></div></div></div>';
       document.getElementById('ui').innerHTML = h;
     }

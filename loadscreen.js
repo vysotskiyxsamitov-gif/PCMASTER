@@ -16,6 +16,7 @@
   function finish() {
     if (done) return; done = true; clearInterval(tipIv); perfOn = true;
     set(100, 'Готово');
+    if (window.__batch && window.__batch.run) setTimeout(function () { window.__batch.run(); }, 600);
     if (bar) bar.style.width = '100%'; if (pc) pc.textContent = '100%';
     setTimeout(function () { if (ld) { ld.style.opacity = '0'; setTimeout(function () { ld.style.display = 'none'; }, 800); } }, 250);
   }
@@ -55,11 +56,13 @@
     saved.forEach(function (s) { s[0].visible = s[1]; s[0].frustumCulled = s[2]; });
     extra.forEach(function (g) { scene.remove(g); });
   }
-  function warm(setP, onDone, minMs) {
-    var mats = [], mi = 0, stage = 1, tm = performance.now(), frames = 0, good = 0, t0w = performance.now();
+  function warm(setP, onDone, minMs, maxMs) {
+    var mats = [], mi = 0, stage = 1, tm = performance.now(), frames = 0, good = 0, t0w = performance.now(), fin = false, skipB = null, slow = 0;
+    function end() { if (fin) return; fin = true; if (skipB && skipB.parentNode) skipB.parentNode.removeChild(skipB); console.log('[load] готово за', Math.round(performance.now() - t0w), 'мс, стадия', stage, ', кадров', frames); onDone(); }
+    setTimeout(function () { if (fin || !ld) return; skipB = document.createElement('button'); skipB.textContent = 'Пропустить'; skipB.style.cssText = 'margin-top:18px;padding:9px 18px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#e8ecff;font:inherit;cursor:pointer'; skipB.onclick = end; ld.appendChild(skipB); }, 6000);
     (function step() {
       var el = performance.now() - t0w;
-      if (el > 30000) { onDone(); return; }
+      if (el > (maxMs || 15000)) { end(); return; }
       requestAnimationFrame(step);
       if (stage === 1) {
         if (performance.now() - tm < 700) { setP(42, 'Настройка стиля…'); return; }
@@ -78,8 +81,9 @@
         frames++;
         var dt = performance.now() - tm; tm = performance.now();
         if (dt < 38) good++; else good = Math.max(0, good - 1);
+        if (dt > 120) slow++;
         setP(82 + Math.min(17, good * 1.7), 'Прогрев сцены…');
-        if ((good >= 10 && el > (minMs || 2500)) || frames > 240) onDone();
+        if ((good >= 8 && el > (minMs || 2500)) || frames > 90 || slow > 12) end();
       }
     })();
   }
@@ -91,7 +95,7 @@
     (function wait() {
       var have = 0; FLAGS.forEach(function (f) { if (window[f]) have++; });
       set(5 + have / FLAGS.length * 35, have < FLAGS.length ? 'Загрузка модулей…' : 'Модули готовы');
-      if (have >= FLAGS.length || performance.now() - t0b > 12000) warm(set, finish, 3500);
+      if (have >= FLAGS.length || performance.now() - t0b > 8000) warm(set, finish, 2500, 15000);
       else setTimeout(wait, 100);
     })();
   })();
@@ -111,7 +115,7 @@
       setTimeout(function () {
         try { _sp.apply(self, args); } catch (e) { console.error(e); }
         set(12, 'Расставляем товар…');
-        setTimeout(function () { warm(set, function () { busy = false; finish(); }, 1800); }, 150);
+        setTimeout(function () { warm(set, function () { busy = false; finish(); }, 1500, 12000); }, 150);
       }, 120);
     };
   }

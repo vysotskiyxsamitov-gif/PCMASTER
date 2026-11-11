@@ -184,6 +184,7 @@
     safe(function () {
       var old = hideOld(-6, 6.75); if (!old) return;
       var g = grp(-6, 6.75, old.rotation.y), fab = M(0x2d6a6a, .95), fab2 = M(0x35807f, .95), wood = M(0x5a3b22, .6);
+      var pre = window.__glb && window.__glb.make('sofa'); if (pre) { g.add(pre); return; }   // готовая 3D-модель из models/sofa.glb
       B(g, 3.5, .42, 1.25, fab, 0, .45, 0);                                                          // каркас
       [-1, 0, 1].forEach(function (i) { S(g, .62, fab2, i * 1.1, .85, .05, 1.0, .32, .86); });          // сиденья-подушки
       [-1, 0, 1].forEach(function (i) { var b = S(g, .6, fab2, i * 1.1, 1.38, .52, 1.0, .85, .3); b.rotation.x = -.18; }); // спинки
@@ -198,6 +199,7 @@
     safe(function () {
       var old = hideOld(6.3, -3); if (!old) return;
       var g = grp(6.3, -3, old.rotation.y), mt = M(0x1f2937, .85), ch = M(0xcbd5e1, .3, .8);
+      var pre = window.__glb && window.__glb.make('chair'); if (pre) { g.add(pre); return; }   // models/chair.glb
       for (var i = 0; i < 5; i++) { var an = i / 5 * PI * 2, arm = B(g, .55, .06, .09, ch, Math.cos(an) * .27, .16, Math.sin(an) * .27); arm.rotation.y = -an; S(g, .06, M(0x0b0b0e, .5), Math.cos(an) * .52, .08, Math.sin(an) * .52, 1, 1, 1); }
       C(g, .05, .05, .5, ch, 0, .5, 0); C(g, .09, .09, .15, mt, 0, .8, 0);
       B(g, .95, .14, .9, mt, 0, .92, 0); S(g, .5, mt, 0, .96, 0, 1.0, .18, .95);                                      // сиденье
@@ -210,6 +212,7 @@
       safe(function () {
         var old = hideOld(pp[0], pp[1]); if (!old) return;
         var g = grp(pp[0], pp[1], 0), pot = M(idx == 1 ? 0xc2410c : 0xe5e7eb, .8);
+        var pre = window.__glb && window.__glb.make(idx == 1 ? 'plant_orange' : 'plant_white'); if (pre) { g.add(pre); return; }   // models/plant_*.glb
         L(g, [[.01, 0], [.32, 0], [.42, .08], [.5, .7], [.52, .76], [.46, .76], [.01, .72]], pot, 0, 0, 0, 1, 1);
         C(g, .45, .45, .04, M(0x2a1a10, 1), 0, .7, 0);
         var leaf = [M(0x2f855a, .7), M(0x276749, .7), M(0x38a169, .7)];
@@ -227,6 +230,8 @@
     safe(function () {
       var old = hideOld(9.2, 4.2); if (!old) return;
       var g = grp(9.2, 4.2, old.rotation.y), body = M(0xe5e7eb, .4, .1);
+      var pre = window.__glb && window.__glb.make('cooler'); if (pre) g.add(pre);   // models/cooler.glb (пузырьки остаются кодом, они анимируются)
+      if (!pre) {
       B(g, .85, 1.8, .85, body, 0, .9, 0); B(g, .87, .1, .87, M(0xcbd5e1, .4, .3), 0, 1.8, 0); B(g, .5, .1, .5, M(0x1f2937, .6), 0, .6, .45);
       for (var i = 0; i < 6; i++) B(g, .5, .012, .02, M(0x0b0b0e, .6), 0, .56 + i * .0, .46 + i * .0);
       B(g, .16, .12, .1, M(0x2563eb, .5), -.18, 1.35, .44); B(g, .16, .12, .1, M(0xdc2626, .5), .18, 1.35, .44);
@@ -234,6 +239,7 @@
       var wt = new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: .1, transparent: true, opacity: .45 });
       var bottle = C(g, .32, .3, .85, wt, 0, 2.3, 0); C(g, .12, .2, .12, wt, 0, 2.78, 0); C(g, .1, .1, .06, M(0x2563eb, .5), 0, 2.88, 0);
       var wl = C(g, .29, .27, .6, new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: .1, transparent: true, opacity: .4 }), 0, 2.2, 0);
+      }
       for (var k = 0; k < 6; k++) { var b = S(g, .03 + (k % 3) * .008, new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .55, roughness: .1 }), (Math.random() - .5) * .3, 2.0 + Math.random() * .4, (Math.random() - .5) * .3, 1, 1, 1); b.userData = { y: 2.0 + Math.random() * .4, sp: .25 + Math.random() * .3 }; bub.push(b); }
     });
 
@@ -255,13 +261,16 @@
       var tex = new THREE.CanvasTexture(oakC); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
       var tp = new THREE.Mesh(new THREE.BoxGeometry(6, .2, 2.6), [M(0x5a3a22, .6), M(0x5a3a22, .6), new THREE.MeshStandardMaterial({ map: tex, roughness: .55, metalness: .05 }), M(0x5a3a22, .6), M(0x5a3a22, .6), M(0x5a3a22, .6)]);
       tp.position.set(0, 1.5, 0); tp.castShadow = tp.receiveShadow = true; g.add(tp);
+      var preB = window.__glb && window.__glb.make('bench'); if (preB) g.add(preB);   // models/bench.glb (рама, полка, ящики, тумба, тиски)
+      if (!preB) {
       B(g, 6.1, .06, .06, steel, 0, 1.4, 1.3); B(g, 6.1, .06, .06, steel, 0, 1.4, -1.3);            // стальной кант
       [[-2.8, -1.1], [2.8, -1.1], [-2.8, 1.1], [2.8, 1.1]].forEach(function (a) { B(g, .22, 1.4, .22, steel, a[0], .7, a[1]); B(g, .3, .06, .3, M(0x0b0b0e, .6), a[0], .03, a[1]); });
       B(g, 5.6, .06, .06, steel, 0, .4, 1.1); B(g, 5.6, .06, .06, steel, 0, .4, -1.1); B(g, .06, .06, 2.2, steel, -2.8, .4, 0); B(g, .06, .06, 2.2, steel, 2.8, .4, 0);
       B(g, 5.5, .06, 2.1, M(0x3a3f4c, .6, .3), 0, .43, 0);                                          // нижняя полка
       [[-1.6, .15], [-.4, -.2], [1.0, .1]].forEach(function (a, k) { B(g, .9, .5, .7, M([0x2563eb, 0xb91c1c, 0x15803d][k], .7), a[0], .73, a[1]); B(g, .7, .06, .5, M(0xe5e7eb, .6), a[0], .99, a[1]); });  // ящики на полке
+      }
       /* тумба с ящиками */
-      B(g, 1.55, .9, 2.3, M(0x1f2430, .5, .4), 2.1, 1.0, 0);
+      if (!preB) B(g, 1.55, .9, 2.3, M(0x1f2430, .5, .4), 2.1, 1.0, 0);
       var drw = [];
       [0, 1, 2].forEach(function (i) {
         var d = new THREE.Group(); d.position.set(2.1, .72 + i * .27, 1.17); g.add(d);
@@ -274,7 +283,9 @@
       });
       window.__models.drawers = drw;
       /* тиски */
+      if (!preB) {
       B(g, .5, .22, .4, steel, -2.5, 1.7, 1.0); B(g, .5, .35, .08, steel, -2.5, 1.85, 1.24); var ha = C(g, .03, .03, .55, M(0xb0b6c0, .3, .9), -2.5, 1.82, .78); ha.rotation.x = PI / 2;
+      }
     });
 
 
