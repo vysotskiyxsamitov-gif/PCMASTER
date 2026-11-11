@@ -17,8 +17,10 @@
   function why(o) {
     if (!o.isMesh) return '';
     if (o.isInstancedMesh || o.isSkinnedMesh) return 'instanced/skinned';
-    var m = o.material; if (!m) return 'нет материала'; if (Array.isArray(m)) return 'много материалов';
-    if (m.transparent) return 'прозрачный'; if (m.visible === false || m.wireframe) return 'скрытый материал';
+    var m = o.material; if (!m) return 'нет материала';
+    var ms = Array.isArray(m) ? m : [m];
+    if (Array.isArray(m) && !(o.geometry && o.geometry.groups && o.geometry.groups.length)) return 'много материалов без групп';
+    for (var q = 0; q < ms.length; q++) { var mm = ms[q]; if (!mm) return 'нет материала'; if (mm.transparent) return 'прозрачный'; if (mm.visible === false || mm.wireframe) return 'скрытый материал'; }
     var g = o.geometry; if (!g || !g.isBufferGeometry || !g.attributes.position) return 'нет геометрии';
     if (g.morphAttributes && Object.keys(g.morphAttributes).length) return 'morph';
     if (g.attributes.position.count > 6000) return 'больше 6000 вершин';
@@ -38,7 +40,7 @@
   function snap() {
     scene.updateMatrixWorld(true);
     var map = new Map();
-    scene.traverse(function (o) { if (cand(o)) map.set(o, { m: o.matrixWorld.elements.slice(), s: msig(o.material) }); });
+    scene.traverse(function (o) { if (cand(o)) map.set(o, { m: o.matrixWorld.elements.slice(), s: osig(o) }); });
     return map;
   }
   function same(a, b) { for (var i = 0; i < 16; i++) if (Math.abs(a[i] - b[i]) > 1e-5) return false; return true; }
@@ -48,78 +50,120 @@
     if (m.map) t += '|' + m.map.repeat.x + ',' + m.map.repeat.y + ',' + m.map.offset.x + ',' + m.map.offset.y;
     return t;
   }
+  function osig(o) { return Array.isArray(o.material) ? o.material.map(msig).join('#') : msig(o.material); }
   function sig(g) { return Object.keys(g.attributes).sort().join(',') + (g.index ? 'i' : 'n'); }
 
+  /* элемент склейки: целый меш или одна группа граней (для мешей с массивом материалов) */
+  function items(o) {
+    var m = o.material, g = o.geometry, out = [];
+    if (!Array.isArray(m)) { out.push({ o: o, mat: m, st: 0, cnt: g.index ? g.index.count : g.attributes.position.count }); return out; }
+    g.groups.forEach(function (gr) { var mt = m[gr.materialIndex]; if (mt) out.push({ o: o, mat: mt, st: gr.start, cnt: gr.count }); });
+    return out;
+  }
+  function prep(it) {   // какие вершины нужны элементу и как их перенумеровать
+    var g = it.o.geometry, n = g.attributes.position.count, whole = it.st === 0 && it.cnt === (g.index ? g.index.count : n);
+    if (whole) { it.nv = n; it.verts = null; it.idx = null; return; }
+    var map = new Int32Array(n).fill(-1), verts = [], idx = new Array(it.cnt);
+    for (var i = 0; i < it.cnt; i++) { var vi = g.index ? g.index.getX(it.st + i) : it.st + i; if (map[vi] < 0) { map[vi] = verts.length; verts.push(vi); } idx[i] = map[vi]; }
+    it.nv = verts.length; it.verts = verts; it.idx = idx;
+  }
   function mergeGroup(list, mat) {
-    var attrs = Object.keys(list[0].geometry.attributes), nv = 0, ni = 0, i, j;
-    list.forEach(function (o) { nv += o.geometry.attributes.position.count; ni += o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count; });
-    var arrs = {}; attrs.forEach(function (n) { var a = list[0].geometry.attributes[n]; arrs[n] = { s: a.itemSize, d: new Float32Array(nv * a.itemSize) }; });
+    var attrs = Object.keys(list[0].o.geometry.attributes), nv = 0, ni = 0, i, j;
+    list.forEach(function (it) { prep(it); nv += it.nv; ni += it.idx ? it.idx.length : it.cnt; });
+    var arrs = {}; attrs.forEach(function (n) { var a = list[0].o.geometry.attributes[n]; arrs[n] = { s: a.itemSize, d: new Float32Array(nv * a.itemSize) }; });
     var idx = new Uint16Array(ni), vo = 0, io = 0, v = new THREE.Vector3(), nm = new THREE.Matrix3();
-    list.forEach(function (o) {
-      var g = o.geometry, n = g.attributes.position.count; nm.getNormalMatrix(o.matrixWorld);
+    list.forEach(function (it) {
+      var o = it.o, g = o.geometry, n = it.nv; nm.getNormalMatrix(o.matrixWorld);
       attrs.forEach(function (name) {
         var a = g.attributes[name], dst = arrs[name].d, s = a.itemSize;
         for (i = 0; i < n; i++) {
-          if (name === 'position') { v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
-          else if (name === 'normal') { v.fromBufferAttribute(a, i).applyMatrix3(nm).normalize(); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
-          else for (j = 0; j < s; j++) dst[(vo + i) * s + j] = a.array[i * s + j];
+          var si = it.verts ? it.verts[i] : i;
+          if (name === 'position') { v.fromBufferAttribute(a, si).applyMatrix4(o.matrixWorld); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
+          else if (name === 'normal') { v.fromBufferAttribute(a, si).applyMatrix3(nm).normalize(); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
+          else for (j = 0; j < s; j++) dst[(vo + i) * s + j] = a.array[si * s + j];
         }
       });
-      var flip = o.matrixWorld.determinant() < 0, cnt = g.index ? g.index.count : n;
-      for (i = 0; i < cnt; i++) idx[io + i] = (g.index ? g.index.getX(i) : i) + vo;
+      var flip = o.matrixWorld.determinant() < 0, cnt = it.idx ? it.idx.length : it.cnt;
+      for (i = 0; i < cnt; i++) idx[io + i] = (it.idx ? it.idx[i] : (g.index ? g.index.getX(i) : i)) + vo;
       if (flip) for (i = 0; i < cnt; i += 3) { var t = idx[io + i + 1]; idx[io + i + 1] = idx[io + i + 2]; idx[io + i + 2] = t; }
-      io += cnt;
-      vo += n;
+      io += cnt; vo += n;
     });
     var bg = new THREE.BufferGeometry();
     attrs.forEach(function (n) { bg.setAttribute(n, new THREE.BufferAttribute(arrs[n].d, arrs[n].s)); });
     bg.setIndex(new THREE.BufferAttribute(idx, 1)); bg.computeBoundingSphere(); bg.computeBoundingBox();
     var mesh = new THREE.Mesh(bg, mat); mesh.frustumCulled = true;
-    mesh.castShadow = list.some(function (o) { return o.castShadow; }); mesh.receiveShadow = list.some(function (o) { return o.receiveShadow; });
+    mesh.castShadow = list.some(function (it) { return it.o.castShadow; }); mesh.receiveShadow = list.some(function (it) { return it.o.receiveShadow; });
     mesh.matrixAutoUpdate = false; mesh.userData.batch = 1;
     return mesh;
   }
+  function kill(c) { if (c.dead) return; c.dead = true; if (c.mesh.parent) c.mesh.parent.remove(c.mesh); c.mesh.geometry.dispose(); stat.out--; }
   function unbatch(c) {
-    if (c.dead) return; c.dead = true;
-    if (c.mesh.parent) c.mesh.parent.remove(c.mesh);
-    c.mesh.geometry.dispose();
-    c.src.forEach(function (s) { s.o.visible = s.want; try { delete s.o.visible; s.o.visible = s.want; } catch (e) { } });
-    stat.out--; console.log('[batch] группа разобрана (объект изменился)');
+    if (c.dead) return;
+    var todo = [c], seen = new Set(), objs = [];
+    while (todo.length) {   // меш мог попасть в несколько кусков (по одному на материал) — разбираем все связанные вместе
+      var x = todo.pop(); if (seen.has(x)) continue; seen.add(x); kill(x);
+      x.recs.forEach(function (r) { if (objs.indexOf(r) < 0) objs.push(r); r.chunks.forEach(function (y) { if (!seen.has(y)) todo.push(y); }); });
+    }
+    objs.forEach(function (r) { r.dead = true; try { delete r.o.visible; r.o.visible = r.want; } catch (e) { } });
+    console.log('[batch] группа разобрана (объект изменился)');
   }
   function build(map) {
-    var groups = new Map();
-    map.forEach(function (_, o) {
-      var p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld), key = msig(o.material) + '|' + sig(o.geometry) + '|' + floor(p.x / CELL) + ',' + floor(p.z / CELL) + ',' + floor(p.y / 8);
-      var gr = groups.get(key); if (!gr) { gr = { mat: o.material.clone(), list: [] }; groups.set(key, gr); } gr.list.push(o);
+    var groups = new Map(), recs = new Map();
+    map.forEach(function (info, o) {
+      var p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld), cell = floor(p.x / CELL) + ',' + floor(p.z / CELL) + ',' + floor(p.y / 8);
+      items(o).forEach(function (it) {
+        var key = msig(it.mat) + '|' + sig(o.geometry) + '|' + cell;
+        var gr = groups.get(key); if (!gr) { gr = { mat: it.mat, list: [] }; groups.set(key, gr); } gr.list.push(it);
+      });
     });
     var root = new THREE.Group(); root.userData.batchRoot = 1; root.matrixAutoUpdate = false; scene.add(root);
+    var made = [];
     groups.forEach(function (gr) {
       if (gr.list.length < 3) return;
       var part = [], nv = 0, parts = [];
-      gr.list.forEach(function (o) { var n = o.geometry.attributes.position.count; if (nv + n > MAXV) { parts.push(part); part = []; nv = 0; } part.push(o); nv += n; });
+      gr.list.forEach(function (it) { var n = it.o.geometry.attributes.position.count; if (nv + n > MAXV) { parts.push(part); part = []; nv = 0; } part.push(it); nv += n; });
       parts.push(part);
       parts.forEach(function (l) {
         if (l.length < 3) return;
-        var mesh = mergeGroup(l, gr.mat); root.add(mesh);
-        var c = { mesh: mesh, src: [], anc: [], dead: false };
-        l.forEach(function (o) {
-          var rec = { o: o, want: true, mat: o.material, ms: msig(o.material), mw: map.get(o).m };
-          Object.defineProperty(o, 'visible', { configurable: true, get: function () { return c.dead ? rec.want : false; }, set: function (v) { rec.want = v; if (!c.dead) unbatch(c); } });
-          c.src.push(rec);
-          for (var p = o.parent; p && !p.isScene; p = p.parent) if (c.anc.indexOf(p) < 0) c.anc.push(p);
-        });
-        c.anc = c.anc.map(function (p) { return { p: p, v: p.visible }; });
-        chunks.push(c); stat.src += l.length; stat.out++;
+        var mesh = mergeGroup(l, gr.mat.clone()); root.add(mesh);
+        var c = { mesh: mesh, recs: [], dead: false }; stat.out++; made.push({ c: c, l: l });
       });
     });
+    // у меша, часть граней которого не склеилась, оставляем видимым весь меш (иначе пропадут стены)
+    var cover = new Map(); made.forEach(function (m) { m.l.forEach(function (it) { cover.set(it.o, (cover.get(it.o) || 0) + 1); }); });
+    var need = new Map(); map.forEach(function (_, o) { need.set(o, items(o).length); });
+    var bad = new Set(); need.forEach(function (n, o) { if ((cover.get(o) || 0) < n) bad.add(o); });
+    var dropped = true;   // убираем куски, в которых есть «неполные» меши, и считаем заново
+    while (dropped) {
+      dropped = false;
+      made.forEach(function (m) { if (m.c.dead) return; if (m.l.some(function (it) { return bad.has(it.o); })) { kill(m.c); dropped = true; m.l.forEach(function (it) { bad.add(it.o); }); } });
+    }
+    made.forEach(function (m) {
+      if (m.c.dead) return;
+      m.l.forEach(function (it) {
+        var o = it.o, r = recs.get(o);
+        if (!r) {
+          r = { o: o, want: true, mat: o.material, ms: osig(o), mw: map.get(o).m, chunks: [], dead: false, anc: [] };
+          (function (rr) { Object.defineProperty(o, 'visible', { configurable: true, get: function () { return rr.dead ? rr.want : false; }, set: function (v) { rr.want = v; if (!rr.dead) unbatch(rr.chunks[0]); } }); })(r);
+          for (var p = o.parent; p && !p.isScene; p = p.parent) r.anc.push({ p: p, v: p.visible });
+          recs.set(o, r); stat.src++;
+        }
+        if (r.chunks.indexOf(m.c) < 0) r.chunks.push(m.c);
+        if (m.c.recs.indexOf(r) < 0) m.c.recs.push(r);
+      });
+      chunks.push(m.c);
+    });
+    allRecs = allRecs.concat(Array.from(recs.values()));
   }
+  var allRecs = [];
   function watch() {
     scene.updateMatrixWorld(true);
-    chunks.forEach(function (c) {
-      if (c.dead) return;
-      for (var i = 0; i < c.anc.length; i++) if (c.anc[i].p.visible !== c.anc[i].v) return unbatch(c);
-      for (var k = 0; k < c.src.length; k++) { var s = c.src[k]; if (s.o.material !== s.mat || msig(s.o.material) !== s.ms || !same(s.o.matrixWorld.elements, s.mw)) return unbatch(c); }
-    });
+    for (var i = 0; i < allRecs.length; i++) {
+      var r = allRecs[i]; if (r.dead || !r.chunks.length || r.chunks[0].dead) continue;
+      var bad = r.o.material !== r.mat || osig(r.o) !== r.ms || !same(r.o.matrixWorld.elements, r.mw);
+      for (var k = 0; !bad && k < r.anc.length; k++) if (r.anc[k].p.visible !== r.anc[k].v) bad = true;
+      if (bad) unbatch(r.chunks[0]);
+    }
   }
   var floor = Math.floor, watchOn = 0;
   function run(again) {

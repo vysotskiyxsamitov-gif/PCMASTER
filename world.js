@@ -342,11 +342,14 @@
 
       // дома напротив: три ряда
       function building(x, z0, w, h, depth, face, v) {
-        var geo = new THREE.BoxGeometry(w, h, depth), uv = geo.attributes.uv, f = face == 'nz' ? 5 : 4, rx = Math.max(1, w / 12), ry = Math.max(1, h / 16.5);
-        for (var k = f * 4; k < f * 4 + 4; k++) uv.setXY(k, uv.getX(k) * rx, uv.getY(k) * ry);
+        /* дом = одна плоская стена-«картинка» (фасад с окнами). Раньше был куб из 6 материалов, это ~6 вызовов отрисовки на дом. */
+        var geo = new THREE.PlaneGeometry(w, h), uv = geo.attributes.uv, rx = Math.max(1, w / 12), ry = Math.max(1, h / 16.5);
+        for (var k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * rx, uv.getY(k) * ry);
         uv.needsUpdate = true;
-        var dk = stdM(0x2b2e36, .95, 0), ms = [dk, dk, dk, dk, dk, dk]; ms[f] = winMats[v % 6];
-        var m = new THREE.Mesh(geo, ms); m.position.set(x, h / 2, z0 + depth / 2); ST.add(m); return m;
+        var m = new THREE.Mesh(geo, winMats[v % 6]);
+        if (face == 'nz') { m.rotation.y = PI; m.position.set(x, h / 2, z0); }          // смотрит на магазин (в сторону −z)
+        else m.position.set(x, h / 2, z0 + depth);                                        // соседние дома: фасад к улице (+z)
+        ST.add(m); return m;
       }
       var x, v = 0;
       for (x = -204; x < 204; x += 24) {                                        // первый ряд
