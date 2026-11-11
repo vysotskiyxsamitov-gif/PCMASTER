@@ -14,16 +14,26 @@
     for (var p = o.parent; p; p = p.parent) { if (p.isScene) break; if (p.userData && (p.userData.act || p.userData.sec || p.userData.dyn || p.userData.keep)) return false; if (p.isCamera || p.isLight) return false; }
     return true;
   }
-  function cand(o) {
-    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh) return false;
-    var m = o.material; if (!m || Array.isArray(m) || m.transparent || m.visible === false || m.wireframe) return false;
-    var g = o.geometry; if (!g || !g.isBufferGeometry || !g.attributes.position || (g.morphAttributes && Object.keys(g.morphAttributes).length)) return false;
-    if (g.attributes.position.count > 6000) return false;
-    for (var k in g.attributes) { var at = g.attributes[k]; if (at.isInterleavedBufferAttribute || !at.array || at.array.constructor !== Float32Array) return false; }
-    if (o.renderOrder || o.frustumCulled === false || o.layers.mask !== 1 || o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return false;
-    if (o.userData && Object.keys(o.userData).length) return false;
-    if (!o.visible || !chainVisible(o)) return false;
-    return chainClean(o);
+  function why(o) {
+    if (!o.isMesh) return '';
+    if (o.isInstancedMesh || o.isSkinnedMesh) return 'instanced/skinned';
+    var m = o.material; if (!m) return 'нет материала'; if (Array.isArray(m)) return 'много материалов';
+    if (m.transparent) return 'прозрачный'; if (m.visible === false || m.wireframe) return 'скрытый материал';
+    var g = o.geometry; if (!g || !g.isBufferGeometry || !g.attributes.position) return 'нет геометрии';
+    if (g.morphAttributes && Object.keys(g.morphAttributes).length) return 'morph';
+    if (g.attributes.position.count > 6000) return 'больше 6000 вершин';
+    for (var k in g.attributes) { var at = g.attributes[k]; if (at.isInterleavedBufferAttribute || !at.array || at.array.constructor !== Float32Array) return 'формат атрибутов'; }
+    if (o.renderOrder) return 'renderOrder'; if (o.frustumCulled === false) return 'frustumCulled off';
+    if (o.layers.mask !== 1) return 'слой'; if (o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender) return 'onBeforeRender';
+    if (o.userData && Object.keys(o.userData).length) return 'userData';
+    if (!o.visible) return o.userData && o.userData.batch ? '' : 'уже склеен/скрыт'; if (!chainVisible(o)) return 'родитель скрыт';
+    if (!chainClean(o)) return 'родитель интерактивный';
+    return '';
+  }
+  function cand(o) { return o.isMesh && !why(o); }
+  function report() {
+    var r = {}, tot = 0, ok = 0; scene.traverse(function (o) { if (!o.isMesh) return; tot++; var w = why(o); if (w) r[w] = (r[w] || 0) + 1; else ok++; });
+    var out = { всего_мешей: tot, подходят: ok, причины: r }; console.log('[batch] отчёт', JSON.stringify(out)); return out;
   }
   function snap() {
     scene.updateMatrixWorld(true);
@@ -111,16 +121,16 @@
       for (var k = 0; k < c.src.length; k++) { var s = c.src[k]; if (s.o.material !== s.mat || msig(s.o.material) !== s.ms || !same(s.o.matrixWorld.elements, s.mw)) return unbatch(c); }
     });
   }
-  var floor = Math.floor;
-  function run() {
-    if (done || !ON || !ok()) return; done = true;
+  var floor = Math.floor, watchOn = 0;
+  function run(again) {
+    if ((done && !again) || !ON || !ok()) return; done = true;
     var t0 = performance.now(), a = snap();
     setTimeout(function () {
       try {
         var b = snap(), keep = new Map();
         a.forEach(function (m, o) { var m2 = b.get(o); if (m2 && m.s === m2.s && same(m.m, m2.m)) keep.set(o, m2); });
         var calls0 = (R && R.info) ? R.info.render.calls : 0;
-        build(keep); setInterval(function () { try { watch(); } catch (e) { } }, 500);
+        build(keep); if (!watchOn) { watchOn = 1; setInterval(function () { try { watch(); } catch (e) { } }, 500); }
         console.log('[batch] склеено', stat.src, 'мешей в', stat.out, 'групп за', Math.round(performance.now() - t0), 'мс; вызовов до:', calls0);
       } catch (e) { console.warn('[batch] ошибка', e); }
     }, 1800);
@@ -138,6 +148,6 @@
     hud: hud, hudOn: function () { return hudOn; },
     get: function () { return ON; },
     toggle: function () { ON = !ON; try { localStorage.setItem('pcbatch', ON ? '1' : '0'); } catch (e) { } if (typeof toast == 'function') toast('Объединение объектов: ' + (ON ? 'включено, применится после перезапуска' : 'выключено, применится после перезапуска')); },
-    run: run, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
+    run: run, why: report, again: function () { run(true); }, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
   };
 })();

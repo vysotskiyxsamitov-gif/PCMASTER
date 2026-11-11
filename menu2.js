@@ -3,7 +3,7 @@
 (function () {
   if (window.__menu2Loaded) return;
   window.__menu2Loaded = 1;
-  var BUILD = 'сборка 11.11-T';
+  var BUILD = 'сборка 11.11-U';
 
   function ready() { try { return typeof UI === 'function' && typeof play === 'function' && typeof cont === 'function' && typeof ld === 'function' && !!document.getElementById('ui'); } catch (e) { return false; } }
 
