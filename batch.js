@@ -28,10 +28,16 @@
   function snap() {
     scene.updateMatrixWorld(true);
     var map = new Map();
-    scene.traverse(function (o) { if (cand(o)) map.set(o, o.matrixWorld.elements.slice()); });
+    scene.traverse(function (o) { if (cand(o)) map.set(o, { m: o.matrixWorld.elements.slice(), s: msig(o.material) }); });
     return map;
   }
   function same(a, b) { for (var i = 0; i < 16; i++) if (Math.abs(a[i] - b[i]) > 1e-5) return false; return true; }
+  function msig(m) {
+    var t = m.type + '|' + (m.color ? m.color.getHex() : 0) + '|' + (m.emissive ? m.emissive.getHex() : 0) + '|' + m.emissiveIntensity + '|' + m.roughness + '|' + m.metalness + '|' + m.opacity + '|' + m.side + '|' + (m.flatShading ? 1 : 0) + '|' + (m.vertexColors ? 1 : 0) + '|' + m.envMapIntensity;
+    t += '|' + (m.map ? m.map.uuid : '') + '|' + (m.emissiveMap ? m.emissiveMap.uuid : '') + '|' + (m.bumpMap ? m.bumpMap.uuid : '') + '|' + (m.normalMap ? m.normalMap.uuid : '') + '|' + (m.roughnessMap ? m.roughnessMap.uuid : '') + '|' + (m.alphaMap ? m.alphaMap.uuid : '') + '|' + (m.envMap ? m.envMap.uuid : '') + '|' + (m.aoMap ? m.aoMap.uuid : '');
+    if (m.map) t += '|' + m.map.repeat.x + ',' + m.map.repeat.y + ',' + m.map.offset.x + ',' + m.map.offset.y;
+    return t;
+  }
   function sig(g) { return Object.keys(g.attributes).sort().join(',') + (g.index ? 'i' : 'n'); }
 
   function mergeGroup(list, mat) {
@@ -73,8 +79,8 @@
   function build(map) {
     var groups = new Map();
     map.forEach(function (_, o) {
-      var p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld), key = o.material.uuid + '|' + sig(o.geometry) + '|' + floor(p.x / CELL) + ',' + floor(p.z / CELL) + ',' + floor(p.y / 8);
-      var gr = groups.get(key); if (!gr) { gr = { mat: o.material, list: [] }; groups.set(key, gr); } gr.list.push(o);
+      var p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld), key = msig(o.material) + '|' + sig(o.geometry) + '|' + floor(p.x / CELL) + ',' + floor(p.z / CELL) + ',' + floor(p.y / 8);
+      var gr = groups.get(key); if (!gr) { gr = { mat: o.material.clone(), list: [] }; groups.set(key, gr); } gr.list.push(o);
     });
     var root = new THREE.Group(); root.userData.batchRoot = 1; root.matrixAutoUpdate = false; scene.add(root);
     groups.forEach(function (gr) {
@@ -87,7 +93,7 @@
         var mesh = mergeGroup(l, gr.mat); root.add(mesh);
         var c = { mesh: mesh, src: [], anc: [], dead: false };
         l.forEach(function (o) {
-          var rec = { o: o, want: true, mat: o.material, mw: map.get(o) };
+          var rec = { o: o, want: true, mat: o.material, ms: msig(o.material), mw: map.get(o).m };
           Object.defineProperty(o, 'visible', { configurable: true, get: function () { return c.dead ? rec.want : false; }, set: function (v) { rec.want = v; if (!c.dead) unbatch(c); } });
           c.src.push(rec);
           for (var p = o.parent; p && !p.isScene; p = p.parent) if (c.anc.indexOf(p) < 0) c.anc.push(p);
@@ -102,7 +108,7 @@
     chunks.forEach(function (c) {
       if (c.dead) return;
       for (var i = 0; i < c.anc.length; i++) if (c.anc[i].p.visible !== c.anc[i].v) return unbatch(c);
-      for (var k = 0; k < c.src.length; k++) { var s = c.src[k]; if (s.o.material !== s.mat || !same(s.o.matrixWorld.elements, s.mw)) return unbatch(c); }
+      for (var k = 0; k < c.src.length; k++) { var s = c.src[k]; if (s.o.material !== s.mat || msig(s.o.material) !== s.ms || !same(s.o.matrixWorld.elements, s.mw)) return unbatch(c); }
     });
   }
   var floor = Math.floor;
@@ -112,7 +118,7 @@
     setTimeout(function () {
       try {
         var b = snap(), keep = new Map();
-        a.forEach(function (m, o) { var m2 = b.get(o); if (m2 && same(m, m2)) keep.set(o, m2); });
+        a.forEach(function (m, o) { var m2 = b.get(o); if (m2 && m.s === m2.s && same(m.m, m2.m)) keep.set(o, m2); });
         var calls0 = (R && R.info) ? R.info.render.calls : 0;
         build(keep); setInterval(function () { try { watch(); } catch (e) { } }, 500);
         console.log('[batch] склеено', stat.src, 'мешей в', stat.out, 'групп за', Math.round(performance.now() - t0), 'мс; вызовов до:', calls0);
