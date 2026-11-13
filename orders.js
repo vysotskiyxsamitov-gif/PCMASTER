@@ -165,7 +165,7 @@
     }
 
     function buildPC() {
-      var p = { n: 'ПК клиента', v: rnd2(250, 900), gb: ['NVIDIA', 'AMD'][rnd2(0, 1)], cb: ['AMD', 'Intel'][rnd2(0, 1)] };
+      var p = { n: 'ПК клиента', v: rnd2(250, 900), gb: ['Nvira', 'Radion'][rnd2(0, 1)], cb: ['Ryzor', 'Corex'][rnd2(0, 1)] };
       var g;
       try { g = window.mkShowPC(p); } catch (e) { g = PB[0](CAT[0][1]); }
       g.scale.setScalar(.213); g.position.set(SPOT.x, SPOT.y, SPOT.z); g.rotation.y = .12;

@@ -6,7 +6,7 @@ var PZ = 0;
 var pzWas = false;
 
 var pzTab = 'g';
-var PZ_BUILD = 'сборка 11.11-Y';
+var PZ_BUILD = 'сборка 13.11-B';
 
 function pzCss() {
   if (document.getElementById('pzcss')) return;
@@ -53,6 +53,7 @@ function pauseDraw() {
       pzRow('🔊 Проверить звук', '', "opt.s=1;sfx('buy');setTimeout(function(){sfx('place')},350);setTimeout(function(){sfx('door')},750)");
   } else if (pzTab == 'v') {
     body = pzRow('Высокое качество', opt.q, 'opt.q=!opt.q;rs();pauseDraw()', 1) +
+      pzRow('Качество текстур', window.__tqapi ? window.__tqapi.name() : '—', 'window.__tqapi&&window.__tqapi.cycle();pauseDraw()') +
       pzRow('Реализм (тени, детали)', window.__rz ? window.__rz.name() : 'нет', 'window.__rz&&window.__rz.cycle();pauseDraw()') +
       pzRow('Показывать FPS и нагрузку', !!(window.__batch && window.__batch.hudOn()), 'window.__batch&&window.__batch.hud();pauseDraw()', 1) +
       pzRow('Объединение объектов (бета)', !!(window.__batch && window.__batch.get()), 'window.__batch&&window.__batch.toggle();pauseDraw()', 1) +

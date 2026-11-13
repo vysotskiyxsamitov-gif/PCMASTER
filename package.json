@@ -1,6 +1,6 @@
 {
   "name": "pc-master",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "PC МАСТЕР — симулятор сборки ПК",
   "main": "main.js",
   "author": "PC Master",
@@ -20,41 +20,14 @@
       "main.js",
       "preload.js",
       "index.html",
-      "audio.js",
-      "pause.js",
-      "intro.js",
-      "extras.js",
-      "fx.js",
-      "street.js",
-      "Room.js",
-      "ultra.js",
-      "world.js",
-      "world2.js",
-      "chars.js",
-      "windows.js",
-      "pcvis.js",
-      "chars2.js",
-      "clean.js",
-      "blackout.js",
-      "orders.js",
-      "realism.js",
-      "detail.js",
-      "look.js",
-      "models.js",
-      "mood.js",
-      "bookview.js",
-      "storage.js",
-      "style.js",
-      "menu2.js",
-      "admin.js",
       "three.min.js",
-      "rays.js",
-      "loadscreen.js",
-      "batch.js",
-      "glb.js",
-      "models/pack.js",
-      "pack.js",
-      "models/*.glb"
+      "graphics/*.js",
+      "logic/*.js",
+      "ui/*.js",
+      "models/**/*",
+      "textures/**/*",
+      "audio/**/*",
+      "data/**/*"
     ],
     "win": {
       "target": "nsis"
@@ -65,6 +38,15 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "artifactName": "PC-MASTER-Setup-${version}.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://ТВОЙ-САЙТ/pcmaster/"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   }
 }

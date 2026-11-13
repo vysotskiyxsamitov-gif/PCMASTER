@@ -31,11 +31,12 @@
     W3.clamp = clamp; W3.lerp = lerp; W3.sstep = sstep; W3.R2 = R2; W3.pick = pick;
 
     function ctex(w, h, fn, rx, ry) {
-      var c = document.createElement('canvas'); c.width = w; c.height = h;
-      fn(c.getContext('2d'), w, h);
+      var k = window.__TQ || 1, c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      var x2 = c.getContext('2d'); x2.scale(k, k); fn(x2, w, h);
       var t = new THREE.CanvasTexture(c);
       t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(rx || 1, ry || 1); t.anisotropy = 8;
+      (window.__texReg = window.__texReg || []).push({ c: c, f: fn, w: w, h: h, t: t });
       return t;
     }
     W3.ctex = ctex;
