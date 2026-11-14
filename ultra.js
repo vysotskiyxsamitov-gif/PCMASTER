@@ -44,9 +44,9 @@
     gg.addColorStop(0, 'rgba(255,244,224,.95)'); gg.addColorStop(.5, 'rgba(255,240,215,.28)'); gg.addColorStop(1, 'rgba(255,240,215,0)');
     gx.fillStyle = gg; gx.fillRect(0, 0, 4, 64);
     var shMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, opacity: .035, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-    var shGeo = new THREE.CylinderGeometry(.75, 2.1, 7, 14, 1, true);
+    var shGeo = new THREE.CylinderGeometry(.82, 2.1, 7, 14, 1, true);
     [-6, -2, 2, 6].forEach(function (x) { [-4, 0, 4].forEach(function (z) {
-      var c = new THREE.Mesh(shGeo, shMat); c.position.set(x, 4.3, z); c.renderOrder = 2; shafts.add(c);
+      var c = new THREE.Mesh(shGeo, shMat); c.position.set(x, 4.25, z); c.renderOrder = 2; shafts.add(c);
     }); });
     scene.add(shafts);
 

@@ -27,7 +27,12 @@
       "models/**/*",
       "textures/**/*",
       "audio/**/*",
-      "data/**/*"
+      "data/**/*",
+      "!models/*.glb",
+      "!**/*.md",
+      "!**/README.txt",
+      "!tools/**",
+      "!**/.gitkeep"
     ],
     "win": {
       "target": "nsis"

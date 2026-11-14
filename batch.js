@@ -11,7 +11,7 @@
   function ok() { try { return typeof THREE !== 'undefined' && !!scene; } catch (e) { return false; } }
   function chainVisible(o) { for (; o; o = o.parent) if (o.visible === false) return false; return true; }
   function chainClean(o) {
-    for (var p = o.parent; p; p = p.parent) { if (p.isScene) break; if (p.userData && (p.userData.act || p.userData.sec || p.userData.dyn || p.userData.keep)) return false; if (p.isCamera || p.isLight) return false; }
+    for (var p = o.parent; p; p = p.parent) { if (p.isScene) break; if (window.__W && p === window.__W.ST) return false; if (p.userData && (p.userData.act || p.userData.sec || p.userData.dyn || p.userData.keep)) return false; if (p.isCamera || p.isLight) return false; }
     return true;
   }
   function why(o) {
@@ -185,6 +185,24 @@
     if (full) { var arr = Array.from(br.entries()).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 15); r.top = arr; console.log('[batch] в кадре', JSON.stringify(r)); console.table(arr.map(function (e) { return { ветка: e[0], вызовов: e[1] }; })); }
     return r;
   }
+  var rsCache = '', rsT = 0;
+  function reasonsLine() {
+    var now = Date.now(); if (now - rsT < 4000) return rsCache; rsT = now;
+    var r = {}; scene.traverse(function (o) { if (!o.isMesh) return; var w = why(o); if (w) r[w] = (r[w] || 0) + 1; });
+    rsCache = Object.keys(r).sort(function (a, b) { return r[b] - r[a]; }).slice(0, 5).map(function (k) { return k + ' ' + r[k]; }).join(', '); return rsCache;
+  }
+  /* тени: мелкие предметы (детали, мусор, мелочь) тень не отбрасывают — это основная нагрузка на проход теней */
+  var PR_R = .45;
+  function pruneShadows() {
+    var n = 0, v = new THREE.Vector3();
+    scene.traverse(function (o) {
+      if (!o.isMesh || !o.castShadow || o.userData.batch || o.isInstancedMesh || !o.geometry) return;
+      var g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (!g.boundingSphere) return;
+      o.updateWorldMatrix(true, false); var e = o.matrixWorld.elements, sc = Math.max(Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
+      if (g.boundingSphere.radius * sc < PR_R) { o.castShadow = false; n++; }
+    });
+    if (n) console.log('[batch] убрана тень у мелких объектов:', n); return n;
+  }
   var floor = Math.floor, watchOn = 0;
   function run(again) {
     if ((done && !again) || !ON || !ok()) return; done = true;
@@ -201,7 +219,8 @@
   }
   /* счётчик нагрузки: FPS, вызовы отрисовки, треугольники */
   var hudEl = null, hudOn = false, frames = 0, tPrev = performance.now(), fps = 0;
-  (function tick() { requestAnimationFrame(tick); frames++; var n = performance.now(); if (n - tPrev >= 500) { fps = Math.round(frames * 1000 / (n - tPrev)); frames = 0; tPrev = n; if (hudOn && hudEl) { var i = (typeof R !== 'undefined' && R.info) ? R.info : null; hudEl.textContent = fps + ' FPS\nвызовов ' + (i ? i.render.calls : '?') + '\nтреугольников ' + (i ? i.render.triangles : '?') + '\nобъектов ' + (i ? i.memory.geometries : '?') + (done && stat.out ? '\nсклеено ' + stat.src + '→' + stat.out : ''); try { var b = breakdown(false); if (b) hudEl.textContent += '\nв кадре: мешей ' + b.mesh + ' (≈' + b.calls + ' выз.)\nпрозрачных ' + b.trans + ', спрайтов ' + b.sprite + '\nтени: кастеров ' + b.cast + ', света с тенью ' + b.shLights; } catch (e) { } } } })();
+  var mxF = 0, mxT = performance.now(), mxShow = 0, lastF = performance.now();
+  (function tick() { requestAnimationFrame(tick); frames++; var n = performance.now(); var df = n - lastF; lastF = n; if (df > mxF) mxF = df; if (n - mxT > 10000) { mxShow = mxF; mxF = 0; mxT = n; } if (n - tPrev >= 500) { fps = Math.round(frames * 1000 / (n - tPrev)); frames = 0; tPrev = n; if (hudOn && hudEl) { var i = (typeof R !== 'undefined' && R.info) ? R.info : null; hudEl.textContent = fps + ' FPS\nвызовов ' + (i ? i.render.calls : '?') + '\nтреугольников ' + (i ? i.render.triangles : '?') + '\nобъектов ' + (i ? i.memory.geometries : '?') + (done && stat.out ? '\nсклеено ' + stat.src + '→' + stat.out : '') + '\nсамый долгий кадр за 10 с: ' + Math.round(Math.max(mxShow, mxF)) + ' мс'; try { var b = breakdown(false); if (b) hudEl.textContent += '\nв кадре: мешей ' + b.mesh + ' (≈' + b.calls + ' выз.)\nпрозрачных ' + b.trans + ', спрайтов ' + b.sprite + '\nтени: кастеров ' + b.cast + ', света с тенью ' + b.shLights + '\nотказы склейки: ' + reasonsLine(); } catch (e) { } } } })();
   function hud(v) {
     hudOn = v === undefined ? !hudOn : !!v;
     if (hudOn && !hudEl) { hudEl = document.createElement('pre'); hudEl.style.cssText = 'position:fixed;left:max(8px,env(safe-area-inset-left,0px));top:max(8px,env(safe-area-inset-top,0px));margin:0;padding:6px 9px;border-radius:8px;background:rgba(0,0,0,.6);color:#7cf0b2;font:12px/1.35 Consolas,monospace;z-index:99998;pointer-events:none;white-space:pre'; document.body.appendChild(hudEl); }
@@ -212,6 +231,6 @@
     hud: hud, hudOn: function () { return hudOn; },
     get: function () { return ON; },
     toggle: function () { ON = !ON; try { localStorage.setItem('pcbatch', ON ? '1' : '0'); } catch (e) { } if (typeof toast == 'function') toast('Объединение объектов: ' + (ON ? 'включено, применится после перезапуска' : 'выключено, применится после перезапуска')); },
-    run: run, why: report, top: function () { return breakdown(true); }, again: function () { run(true); }, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
+    run: run, prune: pruneShadows, why: report, top: function () { return breakdown(true); }, again: function () { run(true); }, stats: function () { return { src: stat.src, groups: stat.out, alive: chunks.filter(function (c) { return !c.dead; }).length }; }
   };
 })();

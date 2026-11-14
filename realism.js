@@ -119,7 +119,7 @@
           var want = LV >= 2;
           if (o.castShadow !== want) {
             o.castShadow = want;
-            if (want) { o.shadow.mapSize.set(1024, 1024); o.shadow.camera.near = .6; o.shadow.camera.far = 17; o.shadow.bias = -.002; o.shadow.normalBias = .04; o.shadow.radius = 4; }
+            if (want) { o.shadow.mapSize.set(512, 512); o.shadow.camera.near = .6; o.shadow.camera.far = 17; o.shadow.bias = -.002; o.shadow.normalBias = .04; o.shadow.radius = 4; }
             if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
           }
         }
@@ -146,7 +146,7 @@
     var _rend = R.render.bind(R), fr = 0, hemiL = null;
     R.render = function (s, c) {
       if (s === scene && c === cam) {
-        if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ % (LV >= 2 ? 3 : 2)) === 0); }
+        if (LV >= 1) { R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = ((fr++ % (LV >= 2 ? 4 : 2)) === 0); }
         else if (!R.shadowMap.autoUpdate) R.shadowMap.autoUpdate = true;
         /* глубокие тени: на время кадра приглушаем рассеянный «заполняющий» свет, тогда тени темнее и объёмнее */
         if (LV >= 1 && !window.__noDeepShadow) {

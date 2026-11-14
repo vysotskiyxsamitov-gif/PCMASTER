@@ -17,6 +17,7 @@
     if (done) return; done = true; clearInterval(tipIv); perfOn = true;
     set(100, 'Готово');
     if (window.__batch && window.__batch.run) setTimeout(function () { window.__batch.run(); }, 600);
+    if (window.__batch && window.__batch.prune) [1500, 10000, 32000].forEach(function (t) { setTimeout(function () { try { window.__batch.prune(); } catch (e) { } }, t); });
     if (window.__batch && window.__batch.again) [9000, 30000].forEach(function (t) { setTimeout(function () { try { window.__batch.again(); } catch (e) { } }, t); });   // добираем объекты, появившиеся после загрузки
     if (bar) bar.style.width = '100%'; if (pc) pc.textContent = '100%';
     setTimeout(function () { if (ld) { ld.style.opacity = '0'; setTimeout(function () { ld.style.display = 'none'; }, 800); } }, 250);

@@ -651,7 +651,7 @@
       shopMats.forEach(function (m) { m.emissiveIntensity = Math.max(.15, ENV.winF * 1.2); });
       lampHeadMat.emissiveIntensity = .1 + 2 * ENV.lampF; lampGlowMat.opacity = ENV.lampF * .85;
       headMat.emissiveIntensity = .2 + 1.8 * ENV.lampF; tailMat.emissiveIntensity = .3 + .9 * ENV.lampF;
-      carGlow.opacity = ENV.lampF * .8; carHalo.opacity = ENV.lampF * .5 + (WX.fog > .3 ? .15 : 0); carCore.opacity = ENV.lampF * .95; carStreak.opacity = ENV.lampF * .38; tailGlow.opacity = ENV.lampF * .55; beamMat.opacity = ENV.lampF * .7 + (WX.fog > .3 ? .15 : 0);
+      carGlow.opacity = ENV.lampF * .8; carHalo.opacity = ENV.lampF * .5 + (WX.fog > .3 ? .15 : 0); carCore.opacity = ENV.lampF * .95; carStreak.opacity = ENV.lampF * .38; tailGlow.opacity = ENV.lampF * .55; [carGlow, carHalo, carCore, carStreak, tailGlow, lampGlowMat].forEach(function (m) { if (m) m.visible = m.opacity > .01; }); beamMat.opacity = ENV.lampF * .7 + (WX.fog > .3 ? .15 : 0);
       if (roadMat) { roadMat.roughness = lerp(.92, .3, WX.wet); roadMat.metalness = lerp(0, .25, WX.wet); }
       if (snowMat) snowMat.opacity = WX.snowAcc * .78 * (.35 + .65 * (dayF + .2));
       updPatches();

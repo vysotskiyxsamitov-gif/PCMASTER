@@ -66,12 +66,16 @@
     });
 
     /* ---------- подвесной потолок со светильниками ---------- */
-    var ctex = ct(256, 256, function (x, W, H) {
-      x.fillStyle = '#9a9fb0'; x.fillRect(0, 0, W, H); noise(x, W, H, 700, .05);
-      x.strokeStyle = '#9a9a96'; x.lineWidth = 4; x.strokeRect(0, 0, W, H);
+    var ctex = ct(512, 512, function (x, W, H) {
+      x.fillStyle = '#c9ccd8'; x.fillRect(0, 0, W, H); noise(x, W, H, 2600, .09);
+      for (var i = 0; i < 900; i++) { var px = rnd01() * W, py = rnd01() * H, rr = .8 + rnd01() * 1.6; x.fillStyle = 'rgba(70,74,90,' + (.18 + rnd01() * .25) + ')'; x.beginPath(); x.arc(px, py, rr, 0, 6.283); x.fill(); }
+      x.strokeStyle = 'rgba(80,84,100,.35)'; x.lineWidth = 1.5; x.strokeRect(14, 14, W - 28, H - 28);
+      x.fillStyle = '#e9ebf2'; x.fillRect(0, 0, W, 9); x.fillRect(0, H - 9, W, 9); x.fillRect(0, 0, 9, H); x.fillRect(W - 9, 0, 9, H);
+      x.fillStyle = 'rgba(60,64,80,.55)'; x.fillRect(0, 9, W, 2); x.fillRect(0, H - 11, W, 2); x.fillRect(9, 0, 2, H); x.fillRect(W - 11, 0, 2, H);
     }, 10, 8); ctex.offset.set(.5, .5);
-    var cm = new THREE.Mesh(new THREE.PlaneGeometry(20, 16), new THREE.MeshStandardMaterial({ map: ctex, roughness: .95, metalness: 0 }));
+    var cm = new THREE.Mesh(new THREE.PlaneGeometry(20, 16), new THREE.MeshBasicMaterial({ map: ctex, color: 0x9aa0b4 }));
     cm.rotation.x = PI / 2; cm.position.y = 7.8; scene.add(cm);
+    setInterval(function () { try { var e = window.__W && window.__W.ENV; var d = e && typeof e.dayF == 'number' ? e.dayF : 1; var k = .42 + .58 * Math.max(0, Math.min(1, d)); cm.material.color.setRGB(.60 * k, .63 * k, .72 * k); } catch (er) { } }, 1000);
     var pm = new THREE.MeshBasicMaterial({ color: 0xe6d3b0 });
     [-6, -2, 2, 6].forEach(function (px) { [-4, 0, 4].forEach(function (pz) {
       var p = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), pm); p.rotation.x = PI / 2; p.position.set(px, 7.78, pz); scene.add(p);
